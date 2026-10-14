@@ -48,8 +48,8 @@ jobs:
           cache: true
           cache-key: ${{ inputs.cache-key }}
 
-      - name: fmt (advisory — CICD-5 flips to blocking)
-        continue-on-error: true
+      - name: fmt (blocking — the CICD-5 fmt sweep landed 2026-10-14;
+          all 68 Rust repos format-clean)
         run: cargo fmt --all -- --check
 
       - name: clippy (advisory — CICD-5 flips to blocking)

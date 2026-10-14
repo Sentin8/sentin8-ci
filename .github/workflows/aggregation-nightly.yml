@@ -43,32 +43,36 @@ jobs:
             https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v1/repos.json)"
           printf '%s' "$map" > .tmp-repos.json
           python3 - <<'PY'
-          import json, os, subprocess, urllib.request
+          import json, os, subprocess
           with open('.tmp-repos.json') as f:
               repos = json.load(f)
           for r in repos:
               dest = r['path']            # exact tree layout, e.g. bank8/bank8-ledger
               url = f"https://github.com/{r['org']}/{r['name']}.git"
-              # The tree-clone is ANONYMOUS — a private repo cannot be
-              # cloned on the runner (cross-org private access can't ride
-              # GITHUB_TOKEN). Skip private repos with a clear message;
-              # they join the nightly the day they go public.
-              try:
-                  code = urllib.request.urlopen(
-                      urllib.request.Request(
-                          f"https://api.github.com/repos/{r['org']}/{r['name']}",
-                          headers={'Accept': 'application/vnd.github+json'}),
-                      timeout=15).getcode()
-              except urllib.error.HTTPError as e:
-                  code = e.code
-              if code != 200:
-                  print(f"skip (private/inaccessible, {code}): {url}")
-                  continue
               os.makedirs(os.path.dirname(dest) or '.', exist_ok=True)
               if os.path.exists(dest):
                   continue
-              print(f"clone {url} → {dest}")
-              subprocess.run(['git', 'clone', '--depth', '1', url, dest], check=True)
+              # Public clones are anonymous; a private repo fails with
+              # git's "Repository not found" — skip it (it joins the
+              # nightly the day it goes public). No API pre-check: an
+              # unauthenticated check would hit GitHub's rate limit at
+              # ~100 repos and skip everything spuriously.
+              res = subprocess.run(
+                  ['git', 'clone', '--depth', '1', url, dest],
+                  capture_output=True, text=True)
+              if res.returncode != 0:
+                  low = res.stderr.lower()
+                  # Private repos: git asks for credentials (terminal
+                  # prompt fails headless) or reports "not found". Both
+                  # mean "not anonymously cloneable" — skip; the repo
+                  # joins the nightly when it goes public.
+                  if ('could not read username' in low
+                          or 'not found' in low or '403' in res.stderr):
+                      print(f"skip (private/inaccessible): {url}")
+                      continue
+                  print(res.stderr, flush=True)
+                  raise SystemExit(1)
+              print(f"cloned {url} → {dest}")
           PY
           rm .tmp-repos.json
 
@@ -307,9 +311,16 @@ jobs:
       - name: Stop fleet + infra down
         if: ${{ always() }}
         run: |
-          set -a; . ./.env; set +a
-          make -C sentin8 stop-release || true
-          make -C sentin8 infra-down || true
+          # The teardown is best-effort: a run that died BEFORE .env was
+          # generated has nothing to source — guard, never mask the real
+          # failure with a teardown error.
+          if [ -f .env ]; then
+            set -a; . ./.env; set +a
+            make -C sentin8 stop-release || true
+            make -C sentin8 infra-down || true
+          else
+            echo '.env never generated — teardown skipped'
+          fi
 
       - name: Upload e2e reports
         if: ${{ !cancelled() }}
