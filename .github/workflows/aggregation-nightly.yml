@@ -43,12 +43,27 @@ jobs:
             https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v1/repos.json)"
           printf '%s' "$map" > .tmp-repos.json
           python3 - <<'PY'
-          import json, os, subprocess
+          import json, os, subprocess, urllib.request
           with open('.tmp-repos.json') as f:
               repos = json.load(f)
           for r in repos:
               dest = r['path']            # exact tree layout, e.g. bank8/bank8-ledger
               url = f"https://github.com/{r['org']}/{r['name']}.git"
+              # The tree-clone is ANONYMOUS — a private repo cannot be
+              # cloned on the runner (cross-org private access can't ride
+              # GITHUB_TOKEN). Skip private repos with a clear message;
+              # they join the nightly the day they go public.
+              try:
+                  code = urllib.request.urlopen(
+                      urllib.request.Request(
+                          f"https://api.github.com/repos/{r['org']}/{r['name']}",
+                          headers={'Accept': 'application/vnd.github+json'}),
+                      timeout=15).getcode()
+              except urllib.error.HTTPError as e:
+                  code = e.code
+              if code != 200:
+                  print(f"skip (private/inaccessible, {code}): {url}")
+                  continue
               os.makedirs(os.path.dirname(dest) or '.', exist_ok=True)
               if os.path.exists(dest):
                   continue
@@ -128,7 +143,11 @@ jobs:
           SENTIN8_STORAGE_LOCAL_ROOT=$ROOT/.run/storage
           SENTIN8_AUTH_UI_DIR=$ROOT/sentin8/sentin8-auth-ui/build/web
           SENTIN8_ACME_DATA_DIR=$ROOT/.run/acme
-          SENTIN8_CAPTAIN_CATALOG_PATHS=$ROOT/bank8/catalog.json,$ROOT/hotel8/catalog.json,$ROOT/trade8/catalog.json,$ROOT/bill8/catalog.json,$ROOT/email8/catalog.json,$ROOT/exchange8/catalog.json
+          SENTIN8_CAPTAIN_CATALOG_PATHS=""
+          for v in bank8 hotel8 trade8 bill8 email8 exchange8; do
+            [ -f "$v/catalog.json" ] && SENTIN8_CAPTAIN_CATALOG_PATHS="$SENTIN8_CAPTAIN_CATALOG_PATHS$ROOT/$v/catalog.json,"
+          done
+          export SENTIN8_CAPTAIN_CATALOG_PATHS="${SENTIN8_CAPTAIN_CATALOG_PATHS%,}"
           EOF
           echo '.env generated (paths absolute, keys per-run)'
 
@@ -224,7 +243,6 @@ jobs:
           cache: npm
           cache-dependency-path: |
             sentin8/sentin8-e2e/package-lock.json
-            bank8/bank8-e2e/package-lock.json
 
       - name: Run sentin8-e2e suites (cli + ui)
         run: |
@@ -244,6 +262,7 @@ jobs:
           npx playwright test tests/ui/ --max-failures=1
 
       - name: Run bank8-e2e suite
+        if: hashFiles('bank8/bank8-e2e/package-lock.json') != ''
         run: |
           set -euo pipefail
           set -a; . ./.env; set +a
