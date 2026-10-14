@@ -51,6 +51,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
 
+      # Chromium for --platform chrome tests (web-coupled packages).
+      - name: Install Chromium (chrome-platform tests)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq chromium-browser \
+            || true
+          which chromium-browser chromium google-chrome 2>/dev/null || true
+
       - name: Clone sentin8-flutter at the pubspec path
         if: ${{ inputs.sentin8-flutter-path != '' }}
         run: |
@@ -77,8 +84,19 @@ jobs:
         continue-on-error: true
         run: dart format --set-exit-if-changed --output=none .
 
-      - name: test (blocking)
-        run: flutter test
+      - name: test (blocking — web-coupled packages run on chrome;
+          the sentin8 Flutter apps are web-only by design, `package:web`
+          pulls dart:js_interop which does not exist on the VM platform)
+        run: |
+          if [ ! -d test ]; then
+            echo 'no test/ directory — test step skipped'
+            exit 0
+          fi
+          if grep -qE '^\s*web:' pubspec.yaml; then
+            flutter test --platform chrome
+          else
+            flutter test
+          fi
 
       - name: build web (blocking — --no-tree-shake-icons is required by
           the RFW renderer's dynamic IconData hex code points)

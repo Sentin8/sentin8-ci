@@ -249,6 +249,7 @@ jobs:
     with:
       flutter-version: '{FLUTTER_VERSION}'
       sentin8-flutter-path: '{flutter_path_dep(r.path)}'
+      build-web: {'true' if (r.path / 'web').is_dir() else 'false'}
 """,
         "e2e": f"""name: ci
 on:
