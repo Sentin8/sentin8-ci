@@ -1,0 +1,306 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# aggregation-nightly.yml — whole-tree verification (CICD design §2.3, RS §7.3).
+#
+# Called by the aggregation root (Sentin8/verticals) on schedule + manual
+# dispatch. This is the ONLY pipeline that boots the full fleet: clones
+# every public repo at the exact tree layout, builds in DAG order,
+# mints infra TLS (certificate identity — no DB passwords exist),
+# bootstraps + enrolls, starts the fleet under captain, and runs the
+# Playwright e2e suites against it. Public-tree prerequisite: the
+# repos.json manifest in this ci repo lists org/repo/class for every
+# repository (sync-ci.py regenerated).
+
+name: aggregation-nightly
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  SQLX_OFFLINE: 'true'
+  SENTIN8_DOMAIN: local.sentin8.dev
+
+jobs:
+  nightly:
+    name: tree-verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Checkout (aggregation root — Makefile, .env.example, docs)
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      # ── 1. Clone the whole public tree at exact disk layout (§2.3-1) ─
+      - name: Clone tree (repos.json manifest, anonymous)
+        run: |
+          set -euo pipefail
+          map="$(curl -fsSL \
+            https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v1/repos.json)"
+          printf '%s' "$map" > .tmp-repos.json
+          python3 - <<'PY'
+          import json, os, subprocess
+          with open('.tmp-repos.json') as f:
+              repos = json.load(f)
+          for r in repos:
+              dest = r['path']            # exact tree layout, e.g. bank8/bank8-ledger
+              url = f"https://github.com/{r['org']}/{r['name']}.git"
+              os.makedirs(os.path.dirname(dest) or '.', exist_ok=True)
+              if os.path.exists(dest):
+                  continue
+              print(f"clone {url} → {dest}")
+              subprocess.run(['git', 'clone', '--depth', '1', url, dest], check=True)
+          PY
+          rm .tmp-repos.json
+
+      # ── 2. Rust toolchain once for the whole tree ────────────────────
+      - name: Rust toolchain (rust-toolchain.toml per repo governs)
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          cache: false
+
+      # ── 3. DAG build (root Makefile: SDK → starters → services → ─────
+      #        vertical SDKs → vertical services), git stamps intact
+      - name: DAG build (release, per-repo — group Makefiles default to
+          debug profile, and the fleet must never mix profiles)
+        run: |
+          set -euo pipefail
+          # Build in DAG order (RS §2.5): platform SDK → starters →
+          # platform services → vertical SDKs → vertical services —
+          # one cargo build --release per repo, stamping via the
+          # Makefile conventions (git SHA preserved by clone).
+          dag_order="sentin8/sentin8-sdk sentin8/sentin8-cli sentin8/sentin8-captain"
+          for s in auth acme proxy bus db storage post stat secrets func cron flow ai sys app bff web; do
+            dag_order="$dag_order sentin8/sentin8-$s"
+          done
+          for v in bank8 hotel8 trade8 bill8 email8 exchange8; do
+            [ -d "$v" ] || continue
+            dag_order="$dag_order $v/$v-sdk"
+            for d in "$v"/*/; do
+              case "$(basename "$d")" in
+                "$v"-sdk|"$v"-e2e) continue ;;
+              esac
+              [ -f "$d/Cargo.toml" ] && dag_order="$dag_order ${d%/}"
+            done
+          done
+          for r in $dag_order; do
+            echo "=== build $r (release) ==="
+            (cd "$r" && cargo build --release --locked) || exit 1
+          done
+          # sentin8-cli is referenced by absolute path by the e2e
+          # fixtures (SENTIN8_CLI_BIN default target/release).
+          echo "dag build complete"
+
+      # ── 4. Flutter bundles (dash + auth-ui served by the BFF) ────────
+      - name: Flutter toolchain
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Build dash + auth-ui web bundles
+        run: |
+          make -C sentin8/sentin8-dash build
+          make -C sentin8/sentin8-auth-ui build
+
+      # ── 5. Environment (generated secrets, tree-relative paths) ─────
+      - name: Generate .env (from .env.example + per-run values)
+        run: |
+          set -euo pipefail
+          ROOT="$PWD"
+          cp .env.example .env
+          gen() { openssl rand -base64 32 | tr -d '\n'; }
+          cat >> .env <<EOF
+          SENTIN8_BASE_PORT=8000
+          SENTIN8_BFF_ENCRYPTION_KEY=$(gen)
+          SENTIN8_AUTH_MASTER_KEY=$(gen)
+          SENTIN8_SECRETS_MASTER_KEY=$(gen)
+          SENTIN8_RUN_DIR=$ROOT/.run
+          SENTIN8_LOG_DIR=$ROOT/.run/logs
+          SENTIN8_SECRETS_DIR=$ROOT/.run/secrets
+          SENTIN8_M2M_CREDENTIALS_DIR=$ROOT/.run/secrets/m2m-credentials
+          SENTIN8_STORAGE_LOCAL_ROOT=$ROOT/.run/storage
+          SENTIN8_AUTH_UI_DIR=$ROOT/sentin8/sentin8-auth-ui/build/web
+          SENTIN8_ACME_DATA_DIR=$ROOT/.run/acme
+          SENTIN8_CAPTAIN_CATALOG_PATHS=$ROOT/bank8/catalog.json,$ROOT/hotel8/catalog.json,$ROOT/trade8/catalog.json,$ROOT/bill8/catalog.json,$ROOT/email8/catalog.json,$ROOT/exchange8/catalog.json
+          EOF
+          echo '.env generated (paths absolute, keys per-run)'
+
+      # ── 6. Runner prerequisites: :443 + wildcard DNS + CA trust ──────
+      - name: Unprivileged port 80 (proxy :80/:443 listener)
+        run: sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80
+
+      - name: Wildcard DNS (*.local.sentin8.dev → 127.0.0.1)
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y -q dnsmasq >/dev/null
+          echo 'address=/local.sentin8.dev/127.0.0.1' | \
+            sudo tee /etc/dnsmasq.d/sentin8-local.conf
+          echo 'server=1.1.1.1' | sudo tee -a /etc/dnsmasq.d/sentin8-local.conf
+          sudo systemctl restart dnsmasq
+          # Route resolution through dnsmasq while keeping the runner's
+          # resolver (8.8.8.8 etc.) for everything else.
+          sudo sed -i '1i nameserver 127.0.0.1' /etc/resolv.conf
+          dig +short local.sentin8.dev | grep -q 127.0.0.1
+
+      # ── 7. Infra TLS + compose + platform bootstrap ──────────────────
+      - name: Infra TLS mint + infra up (certificate identity — no DB secrets)
+        run: |
+          set -euo pipefail
+          make -C sentin8 infra-tls
+          make -C sentin8 infra-up
+
+      - name: Platform bootstrap + vertical init + enroll
+        run: |
+          set -euo pipefail
+          set -a; . ./.env; set +a
+          cd sentin8/sentin8-cli
+          ./target/release/sentin8-cli db bootstrap
+          # vertical init/enroll take REPO DIRECTORIES (each child
+          # self-describes via service-registration.json — composable
+          # registration, RS §6), never group names.
+          for v in bank8 hotel8 trade8 bill8 email8 exchange8; do
+            dirs=""
+            for d in ../../"$v"/*/; do
+              [ -f "$d/service-registration.json" ] && dirs="$dirs $d"
+            done
+            if [ -n "$dirs" ]; then
+              ./target/release/sentin8-cli vertical init $dirs
+              ./target/release/sentin8-cli vertical enroll $dirs
+            else
+              echo "$v: no registrations — skipped"
+            fi
+          done
+          # Platform services enroll — the group Makefile `enroll`
+          # equivalent, run per repo dir from the CLI checkout.
+          pdirs=""
+          for d in ../sentin8-*/; do
+            [ -f "$d/service-registration.json" ] && pdirs="$pdirs $d"
+          done
+          [ -n "$pdirs" ] && ./target/release/sentin8-cli vertical enroll $pdirs
+
+      # ── 8. Fleet start + health-wait ─────────────────────────────────
+      - name: Start fleet (captain) + wait for health
+        run: |
+          set -euo pipefail
+          set -a; . ./.env; set +a
+          # Binary prefix chain: EVERY repo's target/release dir — bare
+          # catalog names resolve through SENTIN8_CAPTAIN_BINARY_PREFIX
+          # (captain docs; vertical_registry resolve_binary_path).
+          prefix=""
+          for d in sentin8/sentin8-*/; do
+            [ -d "$d/target/release" ] && prefix="$prefix$PWD/$d/target/release:"
+          done
+          for v in bank8 hotel8 trade8 bill8 email8 exchange8; do
+            [ -d "$v" ] || continue
+            for d in "$v"/*/; do
+              [ -d "$d/target/release" ] && prefix="$prefix$PWD/$d/target/release:"
+            done
+          done
+          export SENTIN8_CAPTAIN_BINARY_PREFIX="$prefix"
+          echo "BINARY_PREFIX entries: $(echo "$prefix" | tr ':' '\n' | wc -l)"
+          make -C sentin8 start-release
+          deadline=$((SECONDS + 420))
+          until curl -skf --max-time 5 \
+            "https://dash.ops.sys.local.sentin8.dev/v1/health" >/dev/null 2>&1; do
+            if [ $SECONDS -gt $deadline ]; then
+              echo 'fleet did not become healthy in 7 min'; exit 1
+            fi
+            sleep 10
+          done
+          echo 'fleet healthy'
+
+      # ── 9. Playwright suites (cli then ui) ────────────────────────────
+      - name: Node toolchain
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            sentin8/sentin8-e2e/package-lock.json
+            bank8/bank8-e2e/package-lock.json
+
+      - name: Run sentin8-e2e suites (cli + ui)
+        run: |
+          set -euo pipefail
+          set -a; . ./.env; set +a
+          cd sentin8/sentin8-e2e
+          npm ci
+          npx playwright install --with-deps chromium
+          # The package's test:ui script passes --headed; the config
+          # flips headless via PLAYWRIGHT_HEADLESS (env wins — CI runs
+          # headless), so invoke playwright directly per suite.
+          SENTIN8_REPO_ROOT="$GITHUB_WORKSPACE" \
+          PLAYWRIGHT_HEADLESS=true \
+          npx playwright test tests/cli/ --max-failures=1
+          SENTIN8_REPO_ROOT="$GITHUB_WORKSPACE" \
+          PLAYWRIGHT_HEADLESS=true \
+          npx playwright test tests/ui/ --max-failures=1
+
+      - name: Run bank8-e2e suite
+        run: |
+          set -euo pipefail
+          set -a; . ./.env; set +a
+          cd bank8/bank8-e2e
+          npm ci
+          npx playwright install --with-deps chromium
+          SENTIN8_REPO_ROOT="$GITHUB_WORKSPACE" \
+          PLAYWRIGHT_HEADLESS=true \
+          npm test
+
+      # ── 10. Pin-freshness audit (advisory) ───────────────────────────
+      - name: Pin-freshness audit (advisory)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, re, subprocess, glob
+          stale = 0
+          # git-tag pins: {name} = { git = "URL", tag = "TAG" }
+          pin_re = re.compile(
+              r'^(\S+) = \{ git = "(https://github.com/[^"]+)", tag = "([^"]+)" \}',
+              re.M)
+          for mf in glob.glob('**/Cargo.toml', recursive=True):
+              if '/target/' in mf or '/.git/' in mf:
+                  continue
+              with open(mf) as f:
+                  txt = f.read()
+              for m in pin_re.finditer(txt):
+                  dep, url, tag = m.groups()
+                  owner_repo = url[len('https://github.com/'):].removesuffix('.git')
+                  out = subprocess.run(
+                      ['git', 'ls-remote', '--tags', url],
+                      capture_output=True, text=True).stdout
+                  tags = {ln.split('/')[-1] for ln in out.splitlines() if ln}
+                  if tag not in tags:
+                      print(f'STALE: {mf}: {dep} pins {tag} (missing at {owner_repo})')
+                      stale += 1
+          print(f'pin audit: {stale} stale pins')
+          PY
+
+      # ── 11. Teardown + report artifacts ──────────────────────────────
+      - name: Stop fleet + infra down
+        if: ${{ always() }}
+        run: |
+          set -a; . ./.env; set +a
+          make -C sentin8 stop-release || true
+          make -C sentin8 infra-down || true
+
+      - name: Upload e2e reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-reports
+          path: |
+            sentin8/sentin8-e2e/playwright-report
+            bank8/bank8-e2e/playwright-report
+            sentin8/sentin8-e2e/test-results
+            bank8/bank8-e2e/test-results
+          retention-days: 30
+          if-no-files-found: ignore

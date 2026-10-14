@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# e2e-repo.yml — reusable e2e-repository lane (CICD design §2.1).
+#
+# Called by the Playwright repos (sentin8-e2e, bank8-e2e). The SUITES
+# need the live fleet (PostgreSQL + Valkey + captain + ~20 services) and
+# run ONLY in the aggregation nightly (design §2.3) — this lane keeps the
+# repos themselves honest: dependency install + browser fetch + TS
+# typecheck (advisory while tsc debt exists, CICD-5).
+
+name: e2e-repo-ci
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  install-typecheck:
+    name: install-typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      - name: Node toolchain
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: TypeScript typecheck (advisory — CICD-5 flips to blocking)
+        continue-on-error: true
+        run: npx tsc --noEmit

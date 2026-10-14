@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# docs-group.yml — reusable group-repo lane (CICD design §2.1).
+#
+# Called by the 8 group repos (sentin8/, bank8/, …) and the aggregation
+# root. Their child repositories are gitignored (independent repos on
+# disk), so group CI cannot build children — this lane validates the
+# group-owned artifacts: catalog composition (JSON), Makefile syntax,
+# docker-compose (sentin8/ only), and markdown sanity.
+
+name: docs-group-ci
+
+on:
+  workflow_call:
+    inputs:
+      # true only for the sentin8/ group repo (owns the tree's compose).
+      has-compose:
+        description: 'Validate docker-compose.yml'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      - name: Validate catalog.json (if present)
+        run: |
+          shopt -s nullglob
+          files=(catalog.json)
+          if [ ${#files[@]} -gt 0 ] && [ -f catalog.json ]; then
+            python3 -c 'import json; json.load(open("catalog.json"))'
+            echo 'catalog.json: valid JSON'
+          else
+            echo 'catalog.json: not present — skipped'
+          fi
+
+      - name: Validate vertical-registry.json (if present)
+        run: |
+          if [ -f vertical-registry.json ]; then
+            python3 -c 'import json; json.load(open("vertical-registry.json"))'
+            echo 'vertical-registry.json: valid JSON'
+          else
+            echo 'vertical-registry.json: not present — skipped'
+          fi
+
+      - name: Validate Makefile
+        run: make -n help >/dev/null
+
+      - name: Validate docker-compose.yml
+        if: ${{ inputs.has-compose }}
+        run: docker compose config -q

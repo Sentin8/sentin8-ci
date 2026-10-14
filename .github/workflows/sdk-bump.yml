@@ -1,0 +1,114 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# sdk-bump.yml — consumer-side pin-bump receiver (CICD design §2.2).
+#
+# Called by every consumer repo's `sdk-bump.yml` workflow, which
+# triggers on `repository_dispatch: types: [sdk-released]` (payload
+# { sdk: <pin name>, tag: <new tag> }). The receiver rewrites every pin
+# of that SDK across the repo's Cargo.toml files, refreshes the
+# lockfile, builds + tests, and opens a pin-bump PR via
+# create-pull-request. Secrets are explicit per caller: the cascade App
+# must be installed in the CONSUMER's org for its PR to carry CI
+# (GITHUB_TOKEN PRs land approval-required; design §2.2).
+
+name: sdk-bump
+
+on:
+  workflow_call:
+    secrets:
+      SENTIN8_CI_APP_ID:
+        description: 'Cascade GitHub App ID (empty = PR opened with GITHUB_TOKEN)'
+        required: false
+      SENTIN8_CI_APP_PRIVATE_KEY:
+        description: 'Cascade GitHub App private key (empty = GITHUB_TOKEN PR)'
+        required: false
+
+permissions:
+  # create-pull-request needs contents:write + pull-requests:write.
+  contents: write
+  pull-requests: write
+
+env:
+  SQLX_OFFLINE: 'true'
+
+jobs:
+  bump:
+    name: bump-pin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout (default branch — repository_dispatch receiver)
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      - name: Rewrite pins (rewrites every pin of the SDK repo across manifests)
+        env:
+          # Slashes arrive replaced (`__`) — the dispatch payload
+          # property name tolerates no slash; undo it here.
+          SDK: ${{ github.event.client_payload.sdk }}
+          TAG: ${{ github.event.client_payload.tag }}
+        run: |
+          set -euo pipefail
+          SDK="$(printf '%s' "$SDK" | sed 's|__|/|g')"
+          if [ -z "$SDK" ] || [ -z "$TAG" ]; then
+            echo 'no sdk/tag in dispatch payload — nothing to do'
+            exit 0
+          fi
+          # Rewrite EVERY pin line pointing at the SDK repo — a pinned
+          # workspace exports many crates under one tag (`sentin8`,
+          # `sentin8-middleware`, `sdk_git`, …), and all of them move
+          # together. Only the tag component changes; the URL and the
+          # dependency name are preserved verbatim.
+          changed=0
+          while IFS= read -r -d '' f; do
+            if grep -q "git = \"https://github.com/$SDK" "$f"; then
+              sed -i "s|\(git = \"https://github.com/$SDK\([^\"]*\)\", tag = \"\)[^\"]*\"|\1$TAG\"|g" "$f"
+              changed=1
+              echo "bumped $SDK → $TAG in $f"
+            fi
+          done < <(find . -name Cargo.toml -not -path '*/target/*' -print0)
+          if [ "$changed" = 0 ]; then
+            echo "no pin of $SDK found — nothing to bump"
+            exit 0
+          fi
+
+      - name: Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          cache: true
+
+      - name: Build + test against the new pin
+        run: |
+          # cargo update is part of the CHANGE (the lockfile re-pins
+          # the new git rev) — never --locked here; the build/test
+          # after it verify the resolved graph compiles.
+          cargo update --workspace
+          cargo build --workspace
+          cargo test --workspace
+
+      - name: Mint cascade App token (optional — falls back to GITHUB_TOKEN)
+        id: app-token
+        if: ${{ secrets.SENTIN8_CI_APP_ID != '' && secrets.SENTIN8_CI_APP_PRIVATE_KEY != '' }}
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+
+      - name: Open pin-bump PR
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          commit-message: 'chore: bump ${{ github.event.client_payload.sdk }} to ${{ github.event.client_payload.tag }}'
+          title: 'chore: bump ${{ github.event.client_payload.sdk }} to ${{ github.event.client_payload.tag }}'
+          body: |
+            Automated pin bump from the release cascade (CICD design §2.2).
+
+            - SDK: `${{ github.event.client_payload.sdk }}`
+            - Tag: `${{ github.event.client_payload.tag }}`
+          branch: ci/bump-${{ github.event.client_payload.sdk }}
+          base: main
+          labels: |
+            dependencies
+          delete-branch: true

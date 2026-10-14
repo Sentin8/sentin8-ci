@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# rust.yml — reusable Rust CI lane (CICD design §2.1).
+#
+# Called by every Rust repo in the tree (platform services, vertical
+# services, SDK workspaces, starters) as a thin caller:
+#   uses: Sentin8/sentin8-ci/.github/workflows/rust.yml@ci-v1
+#
+# Blocking: build + test. Advisory: fmt + clippy (debt CICD-5 flips them).
+# All compiles run SQLX_OFFLINE so sqlx macros never reach a live DB —
+# DB-backed integration tests runtime-skip by the sentin8-testing strategy
+# and run for real only in the aggregation nightly (design §2.3).
+
+name: rust-ci
+
+on:
+  workflow_call:
+    inputs:
+      # Extra cache key segment when a repo needs a distinct cache lane.
+      cache-key:
+        description: 'Extra rust-cache key segment'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  SQLX_OFFLINE: 'true'
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      - name: Rust toolchain (rust-toolchain.toml wins)
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          components: rustfmt, clippy
+          cache: true
+          cache-key: ${{ inputs.cache-key }}
+
+      - name: fmt (advisory — CICD-5 flips to blocking)
+        continue-on-error: true
+        run: cargo fmt --all -- --check
+
+      - name: clippy (advisory — CICD-5 flips to blocking)
+        continue-on-error: true
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: build (blocking)
+        run: cargo build --workspace --locked
+
+      - name: test (blocking — DB-backed tests runtime-skip)
+        run: cargo test --workspace --locked

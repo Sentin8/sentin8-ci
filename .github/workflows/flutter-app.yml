@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# flutter-app.yml — reusable Flutter CI lane (CICD design §2.1).
+#
+# Called by every Flutter repo (sentin8-dash, sentin8-auth-ui, the ~20
+# vertical `*-e*` apps, the sentin8-flutter package). Apps declare a
+# RELATIVE PATH dependency on sentin8-flutter (the tree layout); CI
+# reproduces that exact path by cloning the public sentin8-flutter repo
+# relative to the checkout root before `pub get`.
+
+name: flutter-ci
+
+on:
+  workflow_call:
+    inputs:
+      # Exact Flutter version (the tree runs 3.47.2 stable).
+      flutter-version:
+        description: 'Flutter version'
+        required: false
+        default: '3.47.2'
+        type: string
+      # The app's `sentin8:` path dependency AS WRITTEN in pubspec.yaml
+      # (e.g. `../../sentin8/sentin8-flutter`). Empty = no path dep
+      # (the sentin8-flutter package itself).
+      sentin8-flutter-path:
+        description: 'pubspec path dep to sentin8-flutter (empty = none)'
+        required: false
+        default: ''
+        type: string
+      # false for packages without a web build (sentin8-flutter itself).
+      build-web:
+        description: 'Run flutter build web'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-test-build:
+    name: analyze-test-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      FLUTTER_PATH_DEP: ${{ inputs.sentin8-flutter-path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      - name: Clone sentin8-flutter at the pubspec path
+        if: ${{ inputs.sentin8-flutter-path != '' }}
+        run: |
+          mkdir -p "$(dirname "$FLUTTER_PATH_DEP")"
+          git clone --depth 1 https://github.com/Sentin8/sentin8-flutter "$FLUTTER_PATH_DEP"
+
+      - name: Flutter toolchain
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ inputs.flutter-version }}
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: pub get
+        run: flutter pub get
+
+      - name: analyze (advisory while info-debt exists — CICD-5 flips
+          to blocking; fatal-infos is the default)
+        continue-on-error: true
+        run: flutter analyze
+
+      - name: format check (advisory — CICD-5 flips to blocking)
+        continue-on-error: true
+        run: dart format --set-exit-if-changed --output=none .
+
+      - name: test (blocking)
+        run: flutter test
+
+      - name: build web (blocking — --no-tree-shake-icons is required by
+          the RFW renderer's dynamic IconData hex code points)
+        if: ${{ inputs.build-web }}
+        run: flutter build web --no-tree-shake-icons
+
+      - name: Upload web bundle
+        if: ${{ inputs.build-web }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-bundle
+          path: build/web
+          retention-days: 7

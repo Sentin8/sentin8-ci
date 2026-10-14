@@ -1,0 +1,602 @@
+[
+  {
+    "path": ".",
+    "org": "Sentin8",
+    "name": "verticals",
+    "class": "docs"
+  },
+  {
+    "path": "bank8",
+    "org": "Bank8-dev",
+    "name": "bank8",
+    "class": "docs"
+  },
+  {
+    "path": "bank8/bank8-admin",
+    "org": "Bank8-dev",
+    "name": "bank8-admin",
+    "class": "flutter"
+  },
+  {
+    "path": "bank8/bank8-compliance",
+    "org": "Bank8-dev",
+    "name": "bank8-compliance",
+    "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-e2e",
+    "org": "Bank8-dev",
+    "name": "bank8-e2e",
+    "class": "e2e"
+  },
+  {
+    "path": "bank8/bank8-ebank",
+    "org": "Bank8-dev",
+    "name": "bank8-ebank",
+    "class": "flutter"
+  },
+  {
+    "path": "bank8/bank8-efintech",
+    "org": "Bank8-dev",
+    "name": "bank8-efintech",
+    "class": "flutter"
+  },
+  {
+    "path": "bank8/bank8-eteller",
+    "org": "Bank8-dev",
+    "name": "bank8-eteller",
+    "class": "flutter"
+  },
+  {
+    "path": "bank8/bank8-fdx",
+    "org": "Bank8-dev",
+    "name": "bank8-fdx",
+    "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-ledger",
+    "org": "Bank8-dev",
+    "name": "bank8-ledger",
+    "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-payments",
+    "org": "Bank8-dev",
+    "name": "bank8-payments",
+    "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-reporting",
+    "org": "Bank8-dev",
+    "name": "bank8-reporting",
+    "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-risk",
+    "org": "Bank8-dev",
+    "name": "bank8-risk",
+    "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-sdk",
+    "org": "Bank8-dev",
+    "name": "bank8-sdk",
+    "class": "rust"
+  },
+  {
+    "path": "bill8",
+    "org": "commerce8",
+    "name": "bill8",
+    "class": "docs"
+  },
+  {
+    "path": "bill8/bill8-admin",
+    "org": "commerce8",
+    "name": "bill8-admin",
+    "class": "flutter"
+  },
+  {
+    "path": "bill8/bill8-billing",
+    "org": "commerce8",
+    "name": "bill8-billing",
+    "class": "rust"
+  },
+  {
+    "path": "bill8/bill8-checkout",
+    "org": "commerce8",
+    "name": "bill8-checkout",
+    "class": "flutter"
+  },
+  {
+    "path": "bill8/bill8-ledger",
+    "org": "commerce8",
+    "name": "bill8-ledger",
+    "class": "rust"
+  },
+  {
+    "path": "bill8/bill8-merchant",
+    "org": "commerce8",
+    "name": "bill8-merchant",
+    "class": "flutter"
+  },
+  {
+    "path": "bill8/bill8-payments",
+    "org": "commerce8",
+    "name": "bill8-payments",
+    "class": "rust"
+  },
+  {
+    "path": "bill8/bill8-portal",
+    "org": "commerce8",
+    "name": "bill8-portal",
+    "class": "flutter"
+  },
+  {
+    "path": "bill8/bill8-reporting",
+    "org": "commerce8",
+    "name": "bill8-reporting",
+    "class": "rust"
+  },
+  {
+    "path": "bill8/bill8-risk",
+    "org": "commerce8",
+    "name": "bill8-risk",
+    "class": "rust"
+  },
+  {
+    "path": "bill8/bill8-sdk",
+    "org": "commerce8",
+    "name": "bill8-sdk",
+    "class": "rust"
+  },
+  {
+    "path": "bill8/bill8-webhooks",
+    "org": "commerce8",
+    "name": "bill8-webhooks",
+    "class": "rust"
+  },
+  {
+    "path": "email8",
+    "org": "Email8-dev",
+    "name": "email8",
+    "class": "docs"
+  },
+  {
+    "path": "email8/email8-access",
+    "org": "Email8-dev",
+    "name": "email8-access",
+    "class": "rust"
+  },
+  {
+    "path": "email8/email8-gate",
+    "org": "Email8-dev",
+    "name": "email8-gate",
+    "class": "rust"
+  },
+  {
+    "path": "email8/email8-mta",
+    "org": "Email8-dev",
+    "name": "email8-mta",
+    "class": "rust"
+  },
+  {
+    "path": "email8/email8-sdk",
+    "org": "Email8-dev",
+    "name": "email8-sdk",
+    "class": "rust"
+  },
+  {
+    "path": "email8/email8-store",
+    "org": "Email8-dev",
+    "name": "email8-store",
+    "class": "rust"
+  },
+  {
+    "path": "email8/email8-webmail",
+    "org": "Email8-dev",
+    "name": "email8-webmail",
+    "class": "flutter"
+  },
+  {
+    "path": "exchange8",
+    "org": "Exchange8-dev",
+    "name": "exchange8",
+    "class": "docs"
+  },
+  {
+    "path": "exchange8/exchange8-clearing",
+    "org": "Exchange8-dev",
+    "name": "exchange8-clearing",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-eexchange",
+    "org": "Exchange8-dev",
+    "name": "exchange8-eexchange",
+    "class": "docs"
+  },
+  {
+    "path": "exchange8/exchange8-gateway",
+    "org": "Exchange8-dev",
+    "name": "exchange8-gateway",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-margin",
+    "org": "Exchange8-dev",
+    "name": "exchange8-margin",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-md",
+    "org": "Exchange8-dev",
+    "name": "exchange8-md",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-me",
+    "org": "Exchange8-dev",
+    "name": "exchange8-me",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-oms",
+    "org": "Exchange8-dev",
+    "name": "exchange8-oms",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-refdata",
+    "org": "Exchange8-dev",
+    "name": "exchange8-refdata",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-regulatory",
+    "org": "Exchange8-dev",
+    "name": "exchange8-regulatory",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-rfq",
+    "org": "Exchange8-dev",
+    "name": "exchange8-rfq",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-risk",
+    "org": "Exchange8-dev",
+    "name": "exchange8-risk",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-sdk",
+    "org": "Exchange8-dev",
+    "name": "exchange8-sdk",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-settlement",
+    "org": "Exchange8-dev",
+    "name": "exchange8-settlement",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-sor",
+    "org": "Exchange8-dev",
+    "name": "exchange8-sor",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-surveillance",
+    "org": "Exchange8-dev",
+    "name": "exchange8-surveillance",
+    "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8-vfeeds",
+    "org": "Exchange8-dev",
+    "name": "exchange8-vfeeds",
+    "class": "rust"
+  },
+  {
+    "path": "health8",
+    "org": "lmgc-code",
+    "name": "health8",
+    "class": "docs"
+  },
+  {
+    "path": "hotel8",
+    "org": "Hotel8",
+    "name": "hotel8",
+    "class": "docs"
+  },
+  {
+    "path": "hotel8/hotel8-distrib",
+    "org": "Hotel8",
+    "name": "hotel8-distrib",
+    "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8-ebooking",
+    "org": "Hotel8",
+    "name": "hotel8-ebooking",
+    "class": "flutter"
+  },
+  {
+    "path": "hotel8/hotel8-ecorpbooking",
+    "org": "Hotel8",
+    "name": "hotel8-ecorpbooking",
+    "class": "flutter"
+  },
+  {
+    "path": "hotel8/hotel8-eguest",
+    "org": "Hotel8",
+    "name": "hotel8-eguest",
+    "class": "flutter"
+  },
+  {
+    "path": "hotel8/hotel8-ekiosk",
+    "org": "Hotel8",
+    "name": "hotel8-ekiosk",
+    "class": "flutter"
+  },
+  {
+    "path": "hotel8/hotel8-epms",
+    "org": "Hotel8",
+    "name": "hotel8-epms",
+    "class": "flutter"
+  },
+  {
+    "path": "hotel8/hotel8-epos",
+    "org": "Hotel8",
+    "name": "hotel8-epos",
+    "class": "flutter"
+  },
+  {
+    "path": "hotel8/hotel8-loyalty",
+    "org": "Hotel8",
+    "name": "hotel8-loyalty",
+    "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8-meta",
+    "org": "Hotel8",
+    "name": "hotel8-meta",
+    "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8-pms",
+    "org": "Hotel8",
+    "name": "hotel8-pms",
+    "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8-pos",
+    "org": "Hotel8",
+    "name": "hotel8-pos",
+    "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8-sdk",
+    "org": "Hotel8",
+    "name": "hotel8-sdk",
+    "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8-upsell",
+    "org": "Hotel8",
+    "name": "hotel8-upsell",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8",
+    "org": "Sentin8",
+    "name": "sentin8",
+    "class": "docs"
+  },
+  {
+    "path": "sentin8/sentin8-acme",
+    "org": "Sentin8",
+    "name": "sentin8-acme",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-ai",
+    "org": "Sentin8",
+    "name": "sentin8-ai",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-app",
+    "org": "Sentin8",
+    "name": "sentin8-app",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-auth",
+    "org": "Sentin8",
+    "name": "sentin8-auth",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-auth-ui",
+    "org": "Sentin8",
+    "name": "sentin8-auth-ui",
+    "class": "flutter"
+  },
+  {
+    "path": "sentin8/sentin8-bff",
+    "org": "Sentin8",
+    "name": "sentin8-bff",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-bus",
+    "org": "Sentin8",
+    "name": "sentin8-bus",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-captain",
+    "org": "Sentin8",
+    "name": "sentin8-captain",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-cli",
+    "org": "Sentin8",
+    "name": "sentin8-cli",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-cron",
+    "org": "Sentin8",
+    "name": "sentin8-cron",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-dash",
+    "org": "Sentin8",
+    "name": "sentin8-dash",
+    "class": "flutter"
+  },
+  {
+    "path": "sentin8/sentin8-db",
+    "org": "Sentin8",
+    "name": "sentin8-db",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-e2e",
+    "org": "Sentin8",
+    "name": "sentin8-e2e",
+    "class": "e2e"
+  },
+  {
+    "path": "sentin8/sentin8-flow",
+    "org": "Sentin8",
+    "name": "sentin8-flow",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-flutter",
+    "org": "Sentin8",
+    "name": "sentin8-flutter",
+    "class": "flutter"
+  },
+  {
+    "path": "sentin8/sentin8-func",
+    "org": "Sentin8",
+    "name": "sentin8-func",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-packaging",
+    "org": "Sentin8",
+    "name": "sentin8-packaging",
+    "class": "docs"
+  },
+  {
+    "path": "sentin8/sentin8-post",
+    "org": "Sentin8",
+    "name": "sentin8-post",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-proxy",
+    "org": "Sentin8",
+    "name": "sentin8-proxy",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-sdk",
+    "org": "Sentin8",
+    "name": "sentin8-sdk",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-secrets",
+    "org": "Sentin8",
+    "name": "sentin8-secrets",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-stat",
+    "org": "Sentin8",
+    "name": "sentin8-stat",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-storage",
+    "org": "Sentin8",
+    "name": "sentin8-storage",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-sys",
+    "org": "Sentin8",
+    "name": "sentin8-sys",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-web",
+    "org": "Sentin8",
+    "name": "sentin8-web",
+    "class": "rust"
+  },
+  {
+    "path": "trade8",
+    "org": "Trade8-dev",
+    "name": "trade8",
+    "class": "docs"
+  },
+  {
+    "path": "trade8/trade8-bars",
+    "org": "Trade8-dev",
+    "name": "trade8-bars",
+    "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-desk",
+    "org": "Trade8-dev",
+    "name": "trade8-desk",
+    "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-etrader",
+    "org": "Trade8-dev",
+    "name": "trade8-etrader",
+    "class": "docs"
+  },
+  {
+    "path": "trade8/trade8-feed",
+    "org": "Trade8-dev",
+    "name": "trade8-feed",
+    "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-pnl",
+    "org": "Trade8-dev",
+    "name": "trade8-pnl",
+    "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-risk",
+    "org": "Trade8-dev",
+    "name": "trade8-risk",
+    "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-router",
+    "org": "Trade8-dev",
+    "name": "trade8-router",
+    "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-sdk",
+    "org": "Trade8-dev",
+    "name": "trade8-sdk",
+    "class": "rust"
+  }
+]
