@@ -124,7 +124,10 @@ def flutter_path_dep(repo: Path) -> str:
 def discover(tree: Path) -> list[Repo]:
     repos: list[Repo] = []
     for gitdir in sorted(tree.rglob(".git")):
-        if "/target/" in str(gitdir) or "/node_modules/" in str(gitdir):
+        s = str(gitdir)
+        # Scratch dirs (.tmp/, .run/) may hold extracted backup .git
+        # snapshots — never sync targets (AGENTS: scratch under .tmp/).
+        if "/target/" in s or "/node_modules/" in s or "/.tmp/" in s or "/.run/" in s:
             continue
         repo = gitdir.parent
         slug = remote_slug(repo)
