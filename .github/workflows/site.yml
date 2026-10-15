@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@1e60f6208a83e5b5f8d8b4b8b3d0a7c9f2e8d1b4 # v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           cache: npm
@@ -72,7 +72,7 @@ jobs:
 
       - name: Upload Pages artifact
         if: inputs.deploy
-        uses: actions/upload-pages-artifact@3ba03f3ceab6ae5f7eda1fe1cb9eba7393a00662 # v3
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: ${{ inputs.site-dir }}/build
 
@@ -92,7 +92,7 @@ jobs:
     steps:
       - name: Configure Pages
         id: config
-        uses: actions/configure-pages@983e9b4c5f7e6d3f8a2b4c6d8e0f2a4b6c8d0e2f # v5
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5bed7bd0b2d3e6d8a1f3b5c7d9e1a # v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
