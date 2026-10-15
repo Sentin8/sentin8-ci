@@ -40,6 +40,7 @@ graph TD
         W5["sdk-release.yml<br/>(tag push)"]
         W6["sdk-bump.yml<br/>(dispatch receiver)"]
         W7["aggregation-nightly.yml"]
+        W8["site.yml<br/>(harvest → build → Pages)"]
     end
     C -- "uses" --> W1
     C -- "uses" --> W2
@@ -71,6 +72,10 @@ no-ops and the manual cascade keeps working.
 ## 4. Key Files & Data Structures
 
 * **Reusable workflows** (`.github/workflows/*.yml`) — the callable
+  lanes: `rust.yml`, `flutter-app.yml`, `e2e-repo.yml`, `docs-group.yml`,
+  `sdk-release.yml`, `sdk-bump.yml`, `aggregation-nightly.yml`, and
+  `site.yml` (the public website lane: harvest + build + GitHub Pages
+  deploy for sentin8.dev and every `{vertical}.dev` site — WEB design).
   pipelines, each `on: workflow_call`, actions pinned to commit SHAs,
   `permissions: contents: read`, runners pinned to `ubuntu-24.04`.
 * **`scripts/sync-ci.py`** — the generator: classifies every repo by

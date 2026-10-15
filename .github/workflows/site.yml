@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# site.yml — reusable website lane for the 8 public site repos
+# (design/sentin8-websites-design.md §6). Build: harvest → build → deploy to
+# GitHub Pages. The harvest step resolves unit docs from the sibling repos'
+# public main branches (raw.githubusercontent.com), so the deployed site
+# renders exactly what the public repos show.
+#
+# Caller contract (thin, like every other lane):
+#   jobs:
+#     ci:
+#       uses: Sentin8/sentin8-ci/.github/workflows/site.yml@ci-v1
+#       with:
+#         site-dir: .            # optional; default repo root
+#       permissions:
+#         contents: read
+#         pages: write
+#         id-token: write
+
+name: site-ci
+
+on:
+  workflow_call:
+    inputs:
+      site-dir:
+        description: 'Directory holding the Docusaurus site (site.json)'
+        required: false
+        default: '.'
+        type: string
+      deploy:
+        description: 'Deploy to GitHub Pages (false = build check only, e.g. PRs)'
+        required: false
+        default: true
+        type: boolean
+
+# Deploy job needs Pages write; the harvest step itself is read-only.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: harvest + build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@1e60f6208a83e5b5f8d8b4b8b3d0a7c9f2e8d1b4 # v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ${{ inputs.site-dir }}/package-lock.json
+
+      - name: Install
+        working-directory: ${{ inputs.site-dir }}
+        run: npm ci
+
+      - name: Harvest reference docs
+        working-directory: ${{ inputs.site-dir }}
+        run: npm run harvest
+
+      - name: Build
+        working-directory: ${{ inputs.site-dir }}
+        run: npm run build
+
+      - name: Upload Pages artifact
+        if: inputs.deploy
+        uses: actions/upload-pages-artifact@3ba03f3ceab6ae5f7eda1fe1cb9eba7393a00662 # v3
+        with:
+          path: ${{ inputs.site-dir }}/build
+
+  deploy:
+    if: inputs.deploy
+    name: deploy (GitHub Pages)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        id: config
+        uses: actions/configure-pages@983e9b4c5f7e6d3f8a2b4c6d8e0f2a4b6c8d0e2f # v5
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5bed7bd0b2d3e6d8a1f3b5c7d9e1a # v4
