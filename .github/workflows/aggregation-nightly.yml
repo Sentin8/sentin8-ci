@@ -106,9 +106,29 @@ jobs:
               [ -f "$d/Cargo.toml" ] && dag_order="$dag_order ${d%/}"
             done
           done
+          # Nightly disk budget (NIGHTLY-DISK-1, DESIGN §6): prune each
+          # repo's compilation intermediates after its build — the final
+          # binaries under target/release stay (captain's binary-prefix
+          # chain + e2e fixtures resolve them), deps/build/incremental
+          # and .fingerprint go. ~90 release workspaces exhaust the
+          # runner disk otherwise (observed ENOSPC 2026-10-14).
+          # The three starters are exempt: `make start-release` runs
+          # `cargo run --release` through sentin8-cli, which rebuilds
+          # whatever is missing — keeping their intermediates avoids a
+          # dependency-tree recompile at fleet start.
+          export CARGO_PROFILE_RELEASE_DEBUG=0
+          KEEP_INTERMEDIATES="sentin8/sentin8-cli"
           for r in $dag_order; do
             echo "=== build $r (release) ==="
             (cd "$r" && cargo build --release --locked) || exit 1
+            case " $KEEP_INTERMEDIATES " in
+              *" $r "*) ;;
+              *) rm -rf "$r/target/release/deps" \
+                      "$r/target/release/build" \
+                      "$r/target/release/incremental" \
+                      "$r/target/release/.fingerprint" ;;
+            esac
+            echo "── df after $r: $(df -h / | awk 'NR==2 {print $4 " free"}')"
           done
           # sentin8-cli is referenced by absolute path by the e2e
           # fixtures (SENTIN8_CLI_BIN default target/release).
