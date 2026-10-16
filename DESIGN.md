@@ -80,7 +80,7 @@ sequenceDiagram
     Dev->>R: push / PR to main
     R->>W: caller ci.yml (uses:)
     W->>W: checkout (SHA-pinned)
-    W->>W: toolchain (rust: rust-toolchain.toml wins; flutter: 3.47.2)
+    W->>W: toolchain (rust: rust-toolchain.toml wins, flutter: 3.47.2)
     W->>W: cache (rust-cache / flutter cache+pub)
     alt rust
         W->>W: fmt advisory
