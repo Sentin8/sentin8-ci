@@ -3,7 +3,7 @@
 <!-- SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# DESIGN.md: Sentin8:CI — Detailed Design Document
+# Sentin8:CI — Detailed Design Document
 
 > Audience: maintainers of the CI plane. Plan-of-record for the whole
 > tree's CI/CD is `design/sentin8-ci-github-actions-design.md` in the

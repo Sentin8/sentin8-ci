@@ -3,7 +3,7 @@
 <!-- SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# BUSINESS.md: Sentin8:CI — Business Requirements & Functionality
+# Sentin8:CI — Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating
 > what Sentin8:CI **does for the business**. For architecture read
