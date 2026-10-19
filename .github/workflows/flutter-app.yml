@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# flutter-app.yml — reusable Flutter CI lane (CICD design §2.1).
+# flutter-app.yml - reusable Flutter CI lane (CICD design §2.1).
 #
 # Called by every Flutter repo (sentin8-dash, sentin8-auth-ui, the ~20
 # vertical `*-e*` apps, the sentin8-flutter package). Apps declare a
@@ -75,21 +75,21 @@ jobs:
       - name: pub get
         run: flutter pub get
 
-      - name: analyze (advisory while info-debt exists — CICD-5 flips
+      - name: analyze (advisory while info-debt exists - CICD-5 flips
           to blocking; fatal-infos is the default)
         continue-on-error: true
         run: flutter analyze
 
-      - name: format check (advisory — CICD-5 flips to blocking)
+      - name: format check (advisory - CICD-5 flips to blocking)
         continue-on-error: true
         run: dart format --set-exit-if-changed --output=none .
 
-      - name: test (blocking — web-coupled packages run on chrome;
+      - name: test (blocking - web-coupled packages run on chrome;
           the sentin8 Flutter apps are web-only by design, `package:web`
           pulls dart:js_interop which does not exist on the VM platform)
         run: |
           if [ ! -d test ]; then
-            echo 'no test/ directory — test step skipped'
+            echo 'no test/ directory - test step skipped'
             exit 0
           fi
           if grep -qE '^\s*web:' pubspec.yaml; then
@@ -98,7 +98,7 @@ jobs:
             flutter test
           fi
 
-      - name: build web (blocking — --no-tree-shake-icons is required by
+      - name: build web (blocking - --no-tree-shake-icons is required by
           the RFW renderer's dynamic IconData hex code points)
         if: ${{ inputs.build-web }}
         run: flutter build web --no-tree-shake-icons

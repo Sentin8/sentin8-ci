@@ -3,7 +3,7 @@
 <!-- SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# Sentin8:CI — Business Requirements & Functionality
+# Sentin8:CI - Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating
 > what Sentin8:CI **does for the business**. For architecture read
@@ -11,16 +11,16 @@
 
 ## 1. Business Purpose
 
-* **Protect every repository's main branch** — no broken build, test,
+* **Protect every repository's main branch** - no broken build, test,
   or app bundle reaches `main` anywhere in the ~98-repo tree.
-* **Make releases safe and repeatable** — publishing an SDK tag
+* **Make releases safe and repeatable** - publishing an SDK tag
   automatically verifies it and propagates the pin bump to every
   consumer, replacing a full manual cascade that was error-prone
   (missed facades caused two production incidents).
-* **Prove the whole platform works** — a nightly run boots the entire
+* **Prove the whole platform works** - a nightly run boots the entire
   fleet from public source and exercises real user journeys end to
   end (browser UI + CLI).
-* **Cost nothing on public repos** — runners, security scanning, and
+* **Cost nothing on public repos** - runners, security scanning, and
   Dependabot are free; the design deliberately needs no product
   secrets in CI.
 
@@ -66,7 +66,7 @@
 * An SDK release (tag push) triggers verification; when the operator
   has armed the cascade (GitHub App installed), every consumer repo
   automatically receives a pin-bump pull request with fresh CI.
-* Until armed, releases are still verified — only the propagation is
+* Until armed, releases are still verified - only the propagation is
   manual (today's status quo, unchanged).
 * The ring closes link by link: mini-facades and vertical SDKs are
   consumers too, so their releases cascade onward automatically.
@@ -79,21 +79,21 @@
   supervisor, and waits for health.
 * Runs the admin browser journeys and CLI journeys end to end.
 * Audits every dependency pin against published tags (stale pins are
-  reported — the manual cascade's blind spot).
+  reported - the manual cascade's blind spot).
 * Always uploads evidence, even on failure; always tears the fleet
   down.
 
 ## 4. Business Events
 
-No outbound Sentin8:Bus events — this repo is a build-plane tool. Its
+No outbound Sentin8:Bus events - this repo is a build-plane tool. Its
 GitHub-native events: `repository_dispatch` (`sdk-released`) outbound
 in the cascade; reusable-workflow invocations inbound.
 
 ## 5. Business Rules & Invariants
 
-1. A blocking check that fails stops the merge — no warnings-as-pass.
+1. A blocking check that fails stops the merge - no warnings-as-pass.
 2. The cascade never half-fires: unarmed (no App) means fully skipped.
-3. Release tags are pushed one at a time (bulk pushes >3 lose events —
+3. Release tags are pushed one at a time (bulk pushes >3 lose events -
    platform rule documented in the operator checklist).
 4. Caller workflows are generated; hand edits are drift and fail the
    check.
@@ -122,11 +122,11 @@ in the cascade; reusable-workflow invocations inbound.
 
 ## 8. Dependencies & Reliance on Other Services
 
-* **GitHub Actions** (reusable workflows, dispatch API, runners) — the
+* **GitHub Actions** (reusable workflows, dispatch API, runners) - the
   entire execution plane.
-* **Aggregation root repo** (`Sentin8/verticals`) — hosts the nightly
+* **Aggregation root repo** (`Sentin8/verticals`) - hosts the nightly
   caller and the `.env.example` the nightly derives from.
-* **The tree's own tooling** — root Makefile (DAG build), captain
+* **The tree's own tooling** - root Makefile (DAG build), captain
   (fleet), Acme (infra TLS), sentin8-cli (bootstrap/enroll), the e2e
   suites.
 

@@ -3,14 +3,14 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# rust.yml — reusable Rust CI lane (CICD design §2.1).
+# rust.yml - reusable Rust CI lane (CICD design §2.1).
 #
 # Called by every Rust repo in the tree (platform services, vertical
 # services, SDK workspaces, starters) as a thin caller:
 #   uses: Sentin8/sentin8-ci/.github/workflows/rust.yml@ci-v1
 #
 # Blocking: build + test. Advisory: fmt + clippy (debt CICD-5 flips them).
-# All compiles run SQLX_OFFLINE so sqlx macros never reach a live DB —
+# All compiles run SQLX_OFFLINE so sqlx macros never reach a live DB -
 # DB-backed integration tests runtime-skip by the sentin8-testing strategy
 # and run for real only in the aggregation nightly (design §2.3).
 
@@ -48,16 +48,16 @@ jobs:
           cache: true
           cache-key: ${{ inputs.cache-key }}
 
-      - name: fmt (blocking — the CICD-5 fmt sweep landed 2026-10-14;
+      - name: fmt (blocking - the CICD-5 fmt sweep landed 2026-10-14;
           all 68 Rust repos format-clean)
         run: cargo fmt --all -- --check
 
-      - name: clippy (advisory — CICD-5 flips to blocking)
+      - name: clippy (advisory - CICD-5 flips to blocking)
         continue-on-error: true
         run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: build (blocking)
         run: cargo build --workspace --locked
 
-      - name: test (blocking — DB-backed tests runtime-skip)
+      - name: test (blocking - DB-backed tests runtime-skip)
         run: cargo test --workspace --locked

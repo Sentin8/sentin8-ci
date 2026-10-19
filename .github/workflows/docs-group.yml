@@ -3,11 +3,11 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# docs-group.yml — reusable group-repo lane (CICD design §2.1).
+# docs-group.yml - reusable group-repo lane (CICD design §2.1).
 #
 # Called by the 8 group repos (sentin8/, bank8/, …) and the aggregation
 # root. Their child repositories are gitignored (independent repos on
-# disk), so group CI cannot build children — this lane validates the
+# disk), so group CI cannot build children - this lane validates the
 # group-owned artifacts: catalog composition (JSON), Makefile syntax,
 # docker-compose (sentin8/ only), and markdown sanity.
 
@@ -43,7 +43,7 @@ jobs:
             python3 -c 'import json; json.load(open("catalog.json"))'
             echo 'catalog.json: valid JSON'
           else
-            echo 'catalog.json: not present — skipped'
+            echo 'catalog.json: not present - skipped'
           fi
 
       - name: Validate vertical-registry.json (if present)
@@ -52,7 +52,7 @@ jobs:
             python3 -c 'import json; json.load(open("vertical-registry.json"))'
             echo 'vertical-registry.json: valid JSON'
           else
-            echo 'vertical-registry.json: not present — skipped'
+            echo 'vertical-registry.json: not present - skipped'
           fi
 
       - name: Validate Makefile

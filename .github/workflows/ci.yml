@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# ci.yml — this repo's own pipeline: validate every workflow file and
+# ci.yml - this repo's own pipeline: validate every workflow file and
 # the sync script's own templates (self-check lane; DESIGN §9).
 
 name: ci

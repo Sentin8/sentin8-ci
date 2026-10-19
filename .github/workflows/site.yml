@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# site.yml — reusable website lane for the 8 public site repos
+# site.yml - reusable website lane for the 8 public site repos
 # (design/sentin8-websites-design.md §6). Build: harvest → build → deploy to
 # GitHub Pages. The harvest step resolves unit docs from the sibling repos'
 # public main branches (raw.githubusercontent.com), so the deployed site

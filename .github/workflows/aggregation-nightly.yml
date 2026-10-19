@@ -3,12 +3,12 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# aggregation-nightly.yml — whole-tree verification (CICD design §2.3, RS §7.3).
+# aggregation-nightly.yml - whole-tree verification (CICD design §2.3, RS §7.3).
 #
 # Called by the aggregation root (Sentin8/verticals) on schedule + manual
 # dispatch. This is the ONLY pipeline that boots the full fleet: clones
 # every public repo at the exact tree layout, builds in DAG order,
-# mints infra TLS (certificate identity — no DB passwords exist),
+# mints infra TLS (certificate identity - no DB passwords exist),
 # bootstraps + enrolls, starts the fleet under captain, and runs the
 # Playwright e2e suites against it. Public-tree prerequisite: the
 # repos.json manifest in this ci repo lists org/repo/class for every
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
-      - name: Checkout (aggregation root — Makefile, .env.example, docs)
+      - name: Checkout (aggregation root - Makefile, .env.example, docs)
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
 
       # ── 1. Clone the whole public tree at exact disk layout (§2.3-1) ─
@@ -53,7 +53,7 @@ jobs:
               if os.path.exists(dest):
                   continue
               # Public clones are anonymous; a private repo fails with
-              # git's "Repository not found" — skip it (it joins the
+              # git's "Repository not found" - skip it (it joins the
               # nightly the day it goes public). No API pre-check: an
               # unauthenticated check would hit GitHub's rate limit at
               # ~100 repos and skip everything spuriously.
@@ -64,7 +64,7 @@ jobs:
                   low = res.stderr.lower()
                   # Private repos: git asks for credentials (terminal
                   # prompt fails headless) or reports "not found". Both
-                  # mean "not anonymously cloneable" — skip; the repo
+                  # mean "not anonymously cloneable" - skip; the repo
                   # joins the nightly when it goes public.
                   if ('could not read username' in low
                           or 'not found' in low or '403' in res.stderr):
@@ -84,12 +84,12 @@ jobs:
 
       # ── 3. DAG build (root Makefile: SDK → starters → services → ─────
       #        vertical SDKs → vertical services), git stamps intact
-      - name: DAG build (release, per-repo — group Makefiles default to
+      - name: DAG build (release, per-repo - group Makefiles default to
           debug profile, and the fleet must never mix profiles)
         run: |
           set -euo pipefail
           # Build in DAG order (RS §2.5): platform SDK → starters →
-          # platform services → vertical SDKs → vertical services —
+          # platform services → vertical SDKs → vertical services -
           # one cargo build --release per repo, stamping via the
           # Makefile conventions (git SHA preserved by clone).
           dag_order="sentin8/sentin8-sdk sentin8/sentin8-cli sentin8/sentin8-captain"
@@ -107,14 +107,14 @@ jobs:
             done
           done
           # Nightly disk budget (NIGHTLY-DISK-1, DESIGN §6): prune each
-          # repo's compilation intermediates after its build — the final
+          # repo's compilation intermediates after its build - the final
           # binaries under target/release stay (captain's binary-prefix
           # chain + e2e fixtures resolve them), deps/build/incremental
           # and .fingerprint go. ~90 release workspaces exhaust the
           # runner disk otherwise (observed ENOSPC 2026-10-14).
           # The three starters are exempt: `make start-release` runs
           # `cargo run --release` through sentin8-cli, which rebuilds
-          # whatever is missing — keeping their intermediates avoids a
+          # whatever is missing - keeping their intermediates avoids a
           # dependency-tree recompile at fleet start.
           export CARGO_PROFILE_RELEASE_DEBUG=0
           KEEP_INTERMEDIATES="sentin8/sentin8-cli"
@@ -193,7 +193,7 @@ jobs:
           dig +short local.sentin8.dev | grep -q 127.0.0.1
 
       # ── 7. Infra TLS + compose + platform bootstrap ──────────────────
-      - name: Infra TLS mint + infra up (certificate identity — no DB secrets)
+      - name: Infra TLS mint + infra up (certificate identity - no DB secrets)
         run: |
           set -euo pipefail
           make -C sentin8 infra-tls
@@ -206,7 +206,7 @@ jobs:
           cd sentin8/sentin8-cli
           ./target/release/sentin8-cli db bootstrap
           # vertical init/enroll take REPO DIRECTORIES (each child
-          # self-describes via service-registration.json — composable
+          # self-describes via service-registration.json - composable
           # registration, RS §6), never group names.
           for v in bank8 hotel8 trade8 bill8 email8 exchange8; do
             dirs=""
@@ -217,10 +217,10 @@ jobs:
               ./target/release/sentin8-cli vertical init $dirs
               ./target/release/sentin8-cli vertical enroll $dirs
             else
-              echo "$v: no registrations — skipped"
+              echo "$v: no registrations - skipped"
             fi
           done
-          # Platform services enroll — the group Makefile `enroll`
+          # Platform services enroll - the group Makefile `enroll`
           # equivalent, run per repo dir from the CLI checkout.
           pdirs=""
           for d in ../sentin8-*/; do
@@ -233,7 +233,7 @@ jobs:
         run: |
           set -euo pipefail
           set -a; . ./.env; set +a
-          # Binary prefix chain: EVERY repo's target/release dir — bare
+          # Binary prefix chain: EVERY repo's target/release dir - bare
           # catalog names resolve through SENTIN8_CAPTAIN_BINARY_PREFIX
           # (captain docs; vertical_registry resolve_binary_path).
           prefix=""
@@ -276,7 +276,7 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
           # The package's test:ui script passes --headed; the config
-          # flips headless via PLAYWRIGHT_HEADLESS (env wins — CI runs
+          # flips headless via PLAYWRIGHT_HEADLESS (env wins - CI runs
           # headless), so invoke playwright directly per suite.
           SENTIN8_REPO_ROOT="$GITHUB_WORKSPACE" \
           PLAYWRIGHT_HEADLESS=true \
@@ -332,14 +332,14 @@ jobs:
         if: ${{ always() }}
         run: |
           # The teardown is best-effort: a run that died BEFORE .env was
-          # generated has nothing to source — guard, never mask the real
+          # generated has nothing to source - guard, never mask the real
           # failure with a teardown error.
           if [ -f .env ]; then
             set -a; . ./.env; set +a
             make -C sentin8 stop-release || true
             make -C sentin8 infra-down || true
           else
-            echo '.env never generated — teardown skipped'
+            echo '.env never generated - teardown skipped'
           fi
 
       - name: Upload e2e reports

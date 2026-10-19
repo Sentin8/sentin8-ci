@@ -3,11 +3,11 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# sdk-release.yml — SDK tag-push release lane (CICD design §2.2).
+# sdk-release.yml - SDK tag-push release lane (CICD design §2.2).
 #
 # Called by every SDK-repo caller (`release.yml`) on its tag prefix
-# (sdk-v*, cron-sdk-v*, bank8-v*, …). Builds the tagged commit, then —
-# only when the cascade GitHub App secrets are present — fans out a
+# (sdk-v*, cron-sdk-v*, bank8-v*, …). Builds the tagged commit, then -
+# only when the cascade GitHub App secrets are present - fans out a
 # repository_dispatch to every consumer repo named in consumers.json.
 # Without the App secrets the dispatch step is a documented no-op: the
 # cascade is armed the day the operator creates the App (design §2.2,
@@ -58,7 +58,7 @@ jobs:
           cargo build --workspace --locked
           cargo test --workspace --locked
 
-      # ── Consumer fan-out (gated — invariant CICD-5) ─────────────────
+      # ── Consumer fan-out (gated - invariant CICD-5) ─────────────────
       # GITHUB_TOKEN cannot trigger cross-repo runs; the App token can.
       # Both secrets must be non-empty or the step skips gracefully.
       - name: Mint cascade App token
@@ -69,7 +69,7 @@ jobs:
           app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
           private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
           # Token is minted for THIS repository; the dispatch API call
-          # needs contents:write on the TARGET repos — the App's install
+          # needs contents:write on the TARGET repos - the App's install
           # must grant it per org (design §2.5 rollout step 7).
           permission-contents: write
 
@@ -80,7 +80,7 @@ jobs:
           SDK_REPO: ${{ inputs.sdk-repo }}
           SDK_TAG: ${{ github.ref_name }}
           # The consumer map lives in this repo at the ci-v1 ref the
-          # caller itself pins — one source of truth for the graph.
+          # caller itself pins - one source of truth for the graph.
           CONSUMER_MAP_URL: https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v1/consumers.json
         run: |
           set -euo pipefail
@@ -92,7 +92,7 @@ jobs:
             print("\n".join(m.get(sdk, [])))
           ' "$SDK_REPO")"
           if [ -z "$repos" ]; then
-            echo "no consumers declared for $SDK_REPO — dispatch done"
+            echo "no consumers declared for $SDK_REPO - dispatch done"
             exit 0
           fi
           while IFS= read -r repo; do
@@ -100,7 +100,7 @@ jobs:
             echo "dispatch → $repo (sdk-released: $SDK_REPO $SDK_TAG)"
             # The payload carries the SDK repo slug with slashes
             # replaced (client_payload tolerates it; receivers undo
-            # the substitution — see sdk-bump.yml).
+            # the substitution - see sdk-bump.yml).
             payload_sdk="$(printf '%s' "$SDK_REPO" | sed 's|/|__|g')"
             gh api \
               --method POST \
@@ -110,5 +110,5 @@ jobs:
               -f "client_payload[sdk]=$payload_sdk" \
               -f "client_payload[tag]=$SDK_TAG" \
               && echo "  dispatched" \
-              || echo "  FAILED (continuing — cascade is best-effort per repo)"
+              || echo "  FAILED (continuing - cascade is best-effort per repo)"
           done <<< "$repos"

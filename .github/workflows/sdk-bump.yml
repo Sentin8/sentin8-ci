@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
 # SPDX-License-Identifier: Apache-2.0
 
-# sdk-bump.yml — consumer-side pin-bump receiver (CICD design §2.2).
+# sdk-bump.yml - consumer-side pin-bump receiver (CICD design §2.2).
 #
 # Called by every consumer repo's `sdk-bump.yml` workflow, which
 # triggers on `repository_dispatch: types: [sdk-released]` (payload
@@ -40,12 +40,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - name: Checkout (default branch — repository_dispatch receiver)
+      - name: Checkout (default branch - repository_dispatch receiver)
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
 
       - name: Rewrite pins (rewrites every pin of the SDK repo across manifests)
         env:
-          # Slashes arrive replaced (`__`) — the dispatch payload
+          # Slashes arrive replaced (`__`) - the dispatch payload
           # property name tolerates no slash; undo it here.
           SDK: ${{ github.event.client_payload.sdk }}
           TAG: ${{ github.event.client_payload.tag }}
@@ -53,10 +53,10 @@ jobs:
           set -euo pipefail
           SDK="$(printf '%s' "$SDK" | sed 's|__|/|g')"
           if [ -z "$SDK" ] || [ -z "$TAG" ]; then
-            echo 'no sdk/tag in dispatch payload — nothing to do'
+            echo 'no sdk/tag in dispatch payload - nothing to do'
             exit 0
           fi
-          # Rewrite EVERY pin line pointing at the SDK repo — a pinned
+          # Rewrite EVERY pin line pointing at the SDK repo - a pinned
           # workspace exports many crates under one tag (`sentin8`,
           # `sentin8-middleware`, `sdk_git`, …), and all of them move
           # together. Only the tag component changes; the URL and the
@@ -70,7 +70,7 @@ jobs:
             fi
           done < <(find . -name Cargo.toml -not -path '*/target/*' -print0)
           if [ "$changed" = 0 ]; then
-            echo "no pin of $SDK found — nothing to bump"
+            echo "no pin of $SDK found - nothing to bump"
             exit 0
           fi
 
@@ -82,13 +82,13 @@ jobs:
       - name: Build + test against the new pin
         run: |
           # cargo update is part of the CHANGE (the lockfile re-pins
-          # the new git rev) — never --locked here; the build/test
+          # the new git rev) - never --locked here; the build/test
           # after it verify the resolved graph compiles.
           cargo update --workspace
           cargo build --workspace
           cargo test --workspace
 
-      - name: Mint cascade App token (optional — falls back to GITHUB_TOKEN)
+      - name: Mint cascade App token (optional - falls back to GITHUB_TOKEN)
         id: app-token
         if: ${{ secrets.SENTIN8_CI_APP_ID != '' && secrets.SENTIN8_CI_APP_PRIVATE_KEY != '' }}
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
