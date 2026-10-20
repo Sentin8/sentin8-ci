@@ -61,9 +61,18 @@ jobs:
       # ── Consumer fan-out (gated - invariant CICD-5) ─────────────────
       # GITHUB_TOKEN cannot trigger cross-repo runs; the App token can.
       # Both secrets must be non-empty or the step skips gracefully.
+      # NOTE: the `secrets` context is NOT available inside step `if:`
+      # conditions - referencing it there fails workflow parsing at every
+      # caller ("This run likely failed because of a workflow file issue",
+      # zero jobs). The emptiness gate therefore reads through the step
+      # environment instead: mint with `continue-on-error` (empty secrets
+      # make the app-token action fail, which is captured and continues),
+      # then fan out only when a token actually materialized. This keeps
+      # the documented no-op contract: without the App secrets the release
+      # still completes; only the cascade dispatch is skipped.
       - name: Mint cascade App token
         id: app-token
-        if: ${{ secrets.SENTIN8_CI_APP_ID != '' && secrets.SENTIN8_CI_APP_PRIVATE_KEY != '' }}
+        continue-on-error: true
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
