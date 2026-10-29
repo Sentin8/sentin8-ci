@@ -1,11 +1,17 @@
 {
   "Bank8-dev/bank8-sdk": [
     "Bank8-dev/bank8-compliance",
-    "Bank8-dev/bank8-fdx",
     "Bank8-dev/bank8-ledger",
     "Bank8-dev/bank8-payments",
     "Bank8-dev/bank8-reporting",
-    "Bank8-dev/bank8-risk"
+    "Bank8-dev/bank8-risk",
+    "OpenFin8/openfin8-au",
+    "OpenFin8/openfin8-br",
+    "OpenFin8/openfin8-ca",
+    "OpenFin8/openfin8-core",
+    "OpenFin8/openfin8-eu",
+    "OpenFin8/openfin8-uk",
+    "OpenFin8/openfin8-us"
   ],
   "Email8-dev/email8-sdk": [
     "Email8-dev/email8-access",
@@ -37,6 +43,14 @@
     "Hotel8/hotel8-pos",
     "Hotel8/hotel8-upsell"
   ],
+  "OpenFin8/openfin8-core": [
+    "OpenFin8/openfin8-au",
+    "OpenFin8/openfin8-br",
+    "OpenFin8/openfin8-ca",
+    "OpenFin8/openfin8-eu",
+    "OpenFin8/openfin8-uk",
+    "OpenFin8/openfin8-us"
+  ],
   "Sentin8/sentin8-cron": [
     "Bank8-dev/bank8-ledger",
     "Bank8-dev/bank8-payments",
@@ -59,7 +73,6 @@
   ],
   "Sentin8/sentin8-sdk": [
     "Bank8-dev/bank8-compliance",
-    "Bank8-dev/bank8-fdx",
     "Bank8-dev/bank8-ledger",
     "Bank8-dev/bank8-payments",
     "Bank8-dev/bank8-reporting",
@@ -92,6 +105,13 @@
     "Hotel8/hotel8-pos",
     "Hotel8/hotel8-sdk",
     "Hotel8/hotel8-upsell",
+    "OpenFin8/openfin8-au",
+    "OpenFin8/openfin8-br",
+    "OpenFin8/openfin8-ca",
+    "OpenFin8/openfin8-core",
+    "OpenFin8/openfin8-eu",
+    "OpenFin8/openfin8-uk",
+    "OpenFin8/openfin8-us",
     "Sentin8/sentin8-acme",
     "Sentin8/sentin8-ai",
     "Sentin8/sentin8-app",
@@ -107,6 +127,7 @@
     "Sentin8/sentin8-post",
     "Sentin8/sentin8-proxy",
     "Sentin8/sentin8-secrets",
+    "Sentin8/sentin8-sign",
     "Sentin8/sentin8-stat",
     "Sentin8/sentin8-storage",
     "Sentin8/sentin8-sys",
@@ -127,9 +148,13 @@
     "commerce8/bill8-webhooks"
   ],
   "Sentin8/sentin8-secrets": [
-    "Bank8-dev/bank8-fdx",
     "Email8-dev/email8-mta",
     "Exchange8-dev/exchange8-gateway",
+    "OpenFin8/openfin8-au",
+    "OpenFin8/openfin8-br",
+    "OpenFin8/openfin8-core",
+    "OpenFin8/openfin8-eu",
+    "OpenFin8/openfin8-uk",
     "Sentin8/sentin8-ai",
     "Sentin8/sentin8-app",
     "Sentin8/sentin8-post"

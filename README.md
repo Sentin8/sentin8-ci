@@ -110,7 +110,7 @@ no-ops and the manual cascade keeps working.
   which is free on public repos.
 * **Advisory-then-blocking lint** - fmt drift (800-1000 files) and
   clippy backlog (78 errors in auth alone) predate CI; blocking
-  immediately would make every repo red. Debt story CICD-5 flips the
+  immediately would make every repo red. Debt story flips the
   inputs.
 * **`repository_dispatch`, not `workflow_dispatch`** - the cascade is
   event-driven with a payload (`{sdk, tag}`); receivers filter on
@@ -121,18 +121,18 @@ no-ops and the manual cascade keeps working.
 
 ## 6. Internal Implementation & Invariants
 
-* **CICD-1** No repo duplicates pipeline logic; logic changes ship in a
+* **** No repo duplicates pipeline logic; logic changes ship in a
   new `ci-v1` tag.
-* **CICD-2** CI needs no product secrets: public repos (anonymous
+* **** CI needs no product secrets: public repos (anonymous
   fetch) + certificate identity (TLS minted per run) + generated dev
   keys. The only credentials are the optional cascade App secrets.
-* **CICD-3** `SQLX_OFFLINE=true` on every compile; live-DB testing only
+* **** `SQLX_OFFLINE=true` on every compile; live-DB testing only
   in the aggregation nightly.
-* **CICD-4** Blocking checks are honest: build/test block; lint
+* **** Blocking checks are honest: build/test block; lint
   advisories flip via a story, not a flag day.
-* **CICD-5** The cascade never fires unauthenticated: no App secrets →
+* **** The cascade never fires unauthenticated: no App secrets →
   the dispatch step is skipped, never half-run.
-* **CICD-6** Caller files are generated, never hand-edited.
+* **** Caller files are generated, never hand-edited.
 * Bulk tag pushes: >3 tags at once emit no events - release tags are
   pushed one at a time (documented operator rule).
 

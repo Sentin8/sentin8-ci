@@ -106,7 +106,7 @@ jobs:
               [ -f "$d/Cargo.toml" ] && dag_order="$dag_order ${d%/}"
             done
           done
-          # Nightly disk budget (NIGHTLY-DISK-1, DESIGN §6): prune each
+          # Nightly disk budget (DESIGN §6): prune each
           # repo's compilation intermediates after its build - the final
           # binaries under target/release stay (captain's binary-prefix
           # chain + e2e fixtures resolve them), deps/build/incremental

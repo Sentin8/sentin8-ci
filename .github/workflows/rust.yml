@@ -9,7 +9,7 @@
 # services, SDK workspaces, starters) as a thin caller:
 #   uses: Sentin8/sentin8-ci/.github/workflows/rust.yml@ci-v1
 #
-# Blocking: build + test. Advisory: fmt + clippy (debt CICD-5 flips them).
+# Blocking: build + test. Advisory: fmt + clippy (debt flips them).
 # All compiles run SQLX_OFFLINE so sqlx macros never reach a live DB -
 # DB-backed integration tests runtime-skip by the sentin8-testing strategy
 # and run for real only in the aggregation nightly (design §2.3).

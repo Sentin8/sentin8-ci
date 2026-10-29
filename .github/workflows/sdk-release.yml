@@ -11,7 +11,7 @@
 # repository_dispatch to every consumer repo named in consumers.json.
 # Without the App secrets the dispatch step is a documented no-op: the
 # cascade is armed the day the operator creates the App (design §2.2,
-# invariant CICD-5).
+# invariant).
 
 name: sdk-release
 
@@ -58,7 +58,7 @@ jobs:
           cargo build --workspace --locked
           cargo test --workspace --locked
 
-      # ── Consumer fan-out (gated - invariant CICD-5) ─────────────────
+      # ── Consumer fan-out (gated - invariant) ─────────────────
       # GITHUB_TOKEN cannot trigger cross-repo runs; the App token can.
       # Both secrets must be non-empty or the step skips gracefully.
       # NOTE: the `secrets` context is NOT available inside step `if:`

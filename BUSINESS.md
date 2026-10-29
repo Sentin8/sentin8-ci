@@ -146,4 +146,4 @@ in the cascade; reusable-workflow invocations inbound.
 1. Should trivial pin-bump PRs auto-merge after green CI (currently a
    human merges)?
 2. Is a public status page (nightly badge) wanted for each group?
-3. Priority of the ARM64 nightly leg versus other backlog work.
+3. Priority of the ARM64 nightly leg versus the nightly leg planning.

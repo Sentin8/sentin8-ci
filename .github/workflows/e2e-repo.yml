@@ -9,7 +9,7 @@
 # need the live fleet (PostgreSQL + Valkey + captain + ~20 services) and
 # run ONLY in the aggregation nightly (design §2.3) - this lane keeps the
 # repos themselves honest: dependency install + browser fetch + TS
-# typecheck (advisory while tsc debt exists, CICD-5).
+# typecheck (advisory while tsc debt exists,).
 
 name: e2e-repo-ci
 

@@ -36,22 +36,10 @@
     "class": "flutter"
   },
   {
-    "path": "bank8/bank8-efintech",
-    "org": "Bank8-dev",
-    "name": "bank8-efintech",
-    "class": "flutter"
-  },
-  {
     "path": "bank8/bank8-eteller",
     "org": "Bank8-dev",
     "name": "bank8-eteller",
     "class": "flutter"
-  },
-  {
-    "path": "bank8/bank8-fdx",
-    "org": "Bank8-dev",
-    "name": "bank8-fdx",
-    "class": "rust"
   },
   {
     "path": "bank8/bank8-ledger",
@@ -82,6 +70,18 @@
     "org": "Bank8-dev",
     "name": "bank8-sdk",
     "class": "rust"
+  },
+  {
+    "path": "bank8/bank8-site",
+    "org": "Bank8-dev",
+    "name": "bank8-site",
+    "class": "docs"
+  },
+  {
+    "path": "bank8/bank8.github",
+    "org": "Bank8-dev",
+    "name": ".github",
+    "class": "docs"
   },
   {
     "path": "bill8",
@@ -150,10 +150,22 @@
     "class": "rust"
   },
   {
+    "path": "bill8/bill8-site",
+    "org": "commerce8",
+    "name": "bill8-site",
+    "class": "docs"
+  },
+  {
     "path": "bill8/bill8-webhooks",
     "org": "commerce8",
     "name": "bill8-webhooks",
     "class": "rust"
+  },
+  {
+    "path": "bill8/bill8.github",
+    "org": "commerce8",
+    "name": ".github",
+    "class": "docs"
   },
   {
     "path": "email8",
@@ -186,6 +198,12 @@
     "class": "rust"
   },
   {
+    "path": "email8/email8-site",
+    "org": "Email8-dev",
+    "name": "email8-site",
+    "class": "docs"
+  },
+  {
     "path": "email8/email8-store",
     "org": "Email8-dev",
     "name": "email8-store",
@@ -196,6 +214,12 @@
     "org": "Email8-dev",
     "name": "email8-webmail",
     "class": "flutter"
+  },
+  {
+    "path": "email8/email8.github",
+    "org": "Email8-dev",
+    "name": ".github",
+    "class": "docs"
   },
   {
     "path": "exchange8",
@@ -282,6 +306,12 @@
     "class": "rust"
   },
   {
+    "path": "exchange8/exchange8-site",
+    "org": "Exchange8-dev",
+    "name": "exchange8-site",
+    "class": "docs"
+  },
+  {
     "path": "exchange8/exchange8-sor",
     "org": "Exchange8-dev",
     "name": "exchange8-sor",
@@ -298,6 +328,12 @@
     "org": "Exchange8-dev",
     "name": "exchange8-vfeeds",
     "class": "rust"
+  },
+  {
+    "path": "exchange8/exchange8.github",
+    "org": "Exchange8-dev",
+    "name": ".github",
+    "class": "docs"
   },
   {
     "path": "health8",
@@ -384,10 +420,94 @@
     "class": "rust"
   },
   {
+    "path": "hotel8/hotel8-site",
+    "org": "Hotel8",
+    "name": "hotel8-site",
+    "class": "docs"
+  },
+  {
     "path": "hotel8/hotel8-upsell",
     "org": "Hotel8",
     "name": "hotel8-upsell",
     "class": "rust"
+  },
+  {
+    "path": "hotel8/hotel8.github",
+    "org": "Hotel8",
+    "name": ".github",
+    "class": "docs"
+  },
+  {
+    "path": "openfin8",
+    "org": "OpenFin8",
+    "name": "openfin8",
+    "class": "docs"
+  },
+  {
+    "path": "openfin8/openfin8-au",
+    "org": "OpenFin8",
+    "name": "openfin8-au",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8-br",
+    "org": "OpenFin8",
+    "name": "openfin8-br",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8-ca",
+    "org": "OpenFin8",
+    "name": "openfin8-ca",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8-core",
+    "org": "OpenFin8",
+    "name": "openfin8-core",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8-e2e",
+    "org": "OpenFin8",
+    "name": "openfin8-e2e",
+    "class": "e2e"
+  },
+  {
+    "path": "openfin8/openfin8-eopenca",
+    "org": "OpenFin8",
+    "name": "openfin8-eopenca",
+    "class": "flutter"
+  },
+  {
+    "path": "openfin8/openfin8-eu",
+    "org": "OpenFin8",
+    "name": "openfin8-eu",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8-site",
+    "org": "OpenFin8",
+    "name": "openfin8-site",
+    "class": "docs"
+  },
+  {
+    "path": "openfin8/openfin8-uk",
+    "org": "OpenFin8",
+    "name": "openfin8-uk",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8-us",
+    "org": "OpenFin8",
+    "name": "openfin8-us",
+    "class": "rust"
+  },
+  {
+    "path": "openfin8/openfin8.github",
+    "org": "OpenFin8",
+    "name": ".github",
+    "class": "docs"
   },
   {
     "path": "sentin8",
@@ -418,6 +538,12 @@
     "org": "Sentin8",
     "name": "sentin8-auth",
     "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-auth-oidf",
+    "org": "Sentin8",
+    "name": "sentin8-auth-oidf",
+    "class": "e2e"
   },
   {
     "path": "sentin8/sentin8-auth-ui",
@@ -522,6 +648,24 @@
     "class": "rust"
   },
   {
+    "path": "sentin8/sentin8-sign",
+    "org": "Sentin8",
+    "name": "sentin8-sign",
+    "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8-site",
+    "org": "Sentin8",
+    "name": "sentin8-site",
+    "class": "docs"
+  },
+  {
+    "path": "sentin8/sentin8-site-engine",
+    "org": "Sentin8",
+    "name": "sentin8-site-engine",
+    "class": "docs"
+  },
+  {
     "path": "sentin8/sentin8-stat",
     "org": "Sentin8",
     "name": "sentin8-stat",
@@ -544,6 +688,12 @@
     "org": "Sentin8",
     "name": "sentin8-web",
     "class": "rust"
+  },
+  {
+    "path": "sentin8/sentin8.github",
+    "org": "Sentin8",
+    "name": ".github",
+    "class": "docs"
   },
   {
     "path": "trade8",
@@ -598,5 +748,17 @@
     "org": "Trade8-dev",
     "name": "trade8-sdk",
     "class": "rust"
+  },
+  {
+    "path": "trade8/trade8-site",
+    "org": "Trade8-dev",
+    "name": "trade8-site",
+    "class": "docs"
+  },
+  {
+    "path": "trade8/trade8.github",
+    "org": "Trade8-dev",
+    "name": ".github",
+    "class": "docs"
   }
 ]
