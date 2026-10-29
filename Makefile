@@ -23,5 +23,5 @@ check: lint ## + sync-script compile check
 sync: ## Regenerate per-repo callers from the tree (run at tree root)
 	@python3 scripts/sync-ci.py
 
-clean: ## Nothing to clean (source-only repo)
-	@echo 'nothing to clean'
+clean: ## remove .run .run/logs .tmp (source-only repo)
+	@rm -rf .run .run/logs .tmp
