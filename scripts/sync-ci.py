@@ -89,6 +89,8 @@ def classify(repo: Path) -> str:
         return "flutter"
     if (repo / "Cargo.toml").is_file():
         return "rust"
+    if (repo / "site.json").is_file():
+        return "site"
     return "docs"
 
 
@@ -127,7 +129,15 @@ def discover(tree: Path) -> list[Repo]:
         s = str(gitdir)
         # Scratch dirs (.tmp/, .run/) may hold extracted backup .git
         # snapshots — never sync targets (AGENTS: scratch under .tmp/).
-        if "/target/" in s or "/node_modules/" in s or "/.tmp/" in s or "/.run/" in s:
+        # Nested org-profile clones (<group>/.github → <org>/.github) are
+        # README/profile repositories — not CI sync targets either.
+        if (
+            "/target/" in s
+            or "/node_modules/" in s
+            or "/.tmp/" in s
+            or "/.run/" in s
+            or gitdir.parent.name == ".github"
+        ):
             continue
         repo = gitdir.parent
         slug = remote_slug(repo)
@@ -268,6 +278,32 @@ concurrency:
 jobs:
   ci:
     uses: {CI_REPO}/.github/workflows/e2e-repo.yml@{CI_REF}
+""",        "site": f"""name: ci
+# Site lane caller (Sentin8/sentin8-ci site.yml @ci-v1).
+# Push to main: harvest + build + deploy to GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly harvest refresh: rebuild so sibling-repo doc changes land
+    # on the site without a site-repo commit (harvest pulls public main).
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: {CI_REPO}/.github/workflows/site.yml@{CI_REF}
+    with:
+      site-dir: .
+      deploy: ${{{{ github.event_name != 'pull_request' }}}}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 """,
         "docs": f"""name: ci
 on:
