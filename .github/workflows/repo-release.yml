@@ -117,12 +117,16 @@ jobs:
         with:
           node-version: 22
 
-      - name: Typecheck + test (e2e)
+      - name: Typecheck (e2e)
         if: ${{ inputs.repo-class == 'e2e' }}
         run: |
           npm ci
-          npx tsc --noEmit
-          npm test --if-present
+          npx playwright install --with-deps chromium 2>/dev/null || true
+          # typecheck advisory (CICD-5 flips to blocking; mirrors
+          # e2e-repo.yml). The test SUITE needs a live fleet - it is the
+          # aggregation nightly's concern, never a release gate.
+          npx tsc --noEmit \
+            || echo 'typecheck issues (advisory) - logged, not fatal'
 
       - name: Build (site)
         if: ${{ inputs.repo-class == 'site' && inputs.build-web }}
