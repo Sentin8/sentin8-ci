@@ -33,20 +33,20 @@ on:
         description: 'Cascade GitHub App private key (empty = dispatch skipped)'
         required: false
 
-permissions:
-  # GITHUB_TOKEN defaults: the release-create step needs contents:write,
-  # granted by CALLERS through their own `permissions:` block (GitHub
-  # rejects a reusable workflow that elevates its own token scope at
-  # cross-repo call resolution: startup_failure, zero jobs). This file
-  # keeps the conservative read baseline; every generated caller pins
-  # contents: write for this lane.
-  contents: read
 
 env:
   SQLX_OFFLINE: 'true'
 
 jobs:
   release:
+    # Job-level permissions CAP the token inside this reusable workflow
+    # (the caller grant still cannot exceed it, so callers must ALSO
+    # declare contents: write - both sides required: the caller grant
+    # is the ceiling, this declaration the floor. Top-level `permissions:
+    # contents: write` in a reusable workflow is REJECTED at cross-repo
+    # call resolution: startup_failure).
+    permissions:
+      contents: write
     name: release
     runs-on: ubuntu-24.04
     timeout-minutes: 90
