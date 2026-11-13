@@ -34,10 +34,13 @@ on:
         required: false
 
 permissions:
-  # contents:write = the GitHub Release step (single-repo scope). The
-  # consumer FAN-OUT mints its own App token below - this permission
-  # line never grants cross-repo reach.
-  contents: write
+  # GITHUB_TOKEN defaults: the release-create step needs contents:write,
+  # granted by CALLERS through their own `permissions:` block (GitHub
+  # rejects a reusable workflow that elevates its own token scope at
+  # cross-repo call resolution: startup_failure, zero jobs). This file
+  # keeps the conservative read baseline; every generated caller pins
+  # contents: write for this lane.
+  contents: read
 
 env:
   SQLX_OFFLINE: 'true'

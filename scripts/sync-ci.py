@@ -344,6 +344,11 @@ jobs:
     uses: {CI_REPO}/.github/workflows/sdk-release.yml@{CI_REF}
     with:
       sdk-repo: '{r.slug}'
+    # The GitHub Release step inside the lane needs contents:write on
+    # THIS repo - reusable workflows cannot elevate their own token, the
+    # caller grants it (GitHub startup_fails the call otherwise).
+    permissions:
+      contents: write
     secrets:
       SENTIN8_CI_APP_ID: ${{{{ secrets.SENTIN8_CI_APP_ID }}}}
       SENTIN8_CI_APP_PRIVATE_KEY: ${{{{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}}}
@@ -372,6 +377,10 @@ jobs:
     with:
       repo-class: '{r.cls}'
       sentin8-flutter-path: '{flutter_path_dep(r.path)}'
+    # The GitHub Release step inside the lane needs contents:write on
+    # THIS repo - the caller grants it (see sdk-release caller note).
+    permissions:
+      contents: write
 """
     return "\n".join(CALLER_HEADER + body.splitlines()) + "\n"
 

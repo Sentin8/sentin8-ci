@@ -37,10 +37,13 @@ on:
         type: boolean
 
 permissions:
-  # The release step tags a Release onto the same repo - GITHUB_TOKEN
-  # with contents:write suffices (single-repo scope; the CROSS-repo pin
-  # cascade is sdk-release.yml's App-gated concern, not this lane's).
-  contents: write
+  # The release-create step needs contents:write, granted by CALLERS
+  # through their own `permissions:` block (GitHub rejects a reusable
+  # workflow that elevates its own token scope at cross-repo call
+  # resolution: startup_failure, zero jobs). This file keeps the
+  # conservative read baseline; every generated caller pins
+  # contents: write for this lane.
+  contents: read
 
 env:
   SQLX_OFFLINE: 'true'
