@@ -480,7 +480,7 @@ def main() -> int:
         if r.cls == "rust" and r.sdk_tag_prefix:
             drift |= write(wf / "release.yml", caller_release(r),
                            args.dry_run, args.check)
-        elif r.cls in ("rust", "flutter", "e2e"):
+        elif r.cls in ("rust", "flutter", "e2e", "site"):
             # Non-SDK repos release on plain `v*` through the class-
             # aware repo-release lane (docs repos carry no artifact).
             drift |= write(wf / "release.yml", caller_repo_release(r),
