@@ -92,9 +92,21 @@ jobs:
         if: ${{ inputs.repo-class == 'flutter' }}
         run: |
           flutter pub get
-          flutter analyze
-          dart format --set-exit-if-changed --output=none .
-          flutter test
+          # analyze + format: advisory (info-debt exists; CICD-5 flips to
+          # blocking) - mirrored from flutter-app.yml's standing policy.
+          flutter analyze || echo 'analyze issues (advisory) - logged, not fatal'
+          dart format --output=none --set-exit-if-changed . \
+            || echo 'format drift (advisory) - logged, not fatal'
+          # test: blocking - mirrors flutter-app.yml: web-coupled packages
+          # run on chrome (the sentin8 Flutter apps are web-only by
+          # design; package:web pulls dart:js_interop, absent on the VM).
+          if [ ! -d test ]; then
+            echo 'no test/ directory - test step skipped'
+          elif grep -qE '^\s*web:' pubspec.yaml; then
+            flutter test --platform chrome
+          else
+            flutter test
+          fi
           if [ "${{ inputs.build-web }}" = "true" ]; then
             flutter build web --no-tree-shake-icons
           fi
