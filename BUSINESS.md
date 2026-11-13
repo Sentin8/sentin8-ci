@@ -33,7 +33,7 @@
 | Consumer pin-bump automation | On a verified release, every consumer repo gets a ready-to-merge bump PR with passing CI |
 | Whole-tree nightly verification | The fleet boots from scratch nightly; e2e evidence (reports, traces) is retained 30 days |
 | Supply-chain hygiene | Actions pinned to hashes; dependencies alert automatically (Dependabot) |
-| Tooling distribution | One version tag (`ci-v1`) upgrades every repository's pipeline at once |
+| Tooling distribution | One version tag (`ci-v2`) upgrades every repository's pipeline at once |
 
 ### What the service does NOT own (business boundary)
 

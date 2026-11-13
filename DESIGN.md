@@ -16,12 +16,13 @@
 ### 1.1 What this repo owns
 
 * The tree's reusable GitHub Actions workflows (PR lanes per repo
-  class, the SDK release + bump cascade, the aggregation nightly).
+  class, the SDK release + bump cascade, the per-repo release lane,
+  the aggregation nightly).
 * The caller-generation script (`scripts/sync-ci.py`) and its outputs:
   per-repo caller workflows, `rust-toolchain.toml`, `dependabot.yml`.
 * The manifests `repos.json` (tree clone map) and `consumers.json`
   (cascade fan-out map).
-* The versioning contract of the workflows themselves (`ci-v1`).
+* The versioning contract of the workflows themselves (`ci-v2`).
 
 ### 1.2 What it does NOT own
 
@@ -45,8 +46,8 @@ graph TD
     S -- "generates callers" --> R
     S -- "generates root's nightly caller" --> RR
     S -- "writes repos.json / consumers.json" --> C
-    R -- "uses @ci-v1" --> C
-    RR -- "uses @ci-v1 (nightly)" --> C
+    R -- "uses @ci-v2" --> C
+    RR -- "uses @ci-v2 (nightly)" --> C
     C -- "repository_dispatch (App, gated)" --> R
 ```
 
@@ -76,7 +77,7 @@ graph TD
 sequenceDiagram
     participant Dev as contributor
     participant R as repo (any org)
-    participant W as reusable workflow @ci-v1
+    participant W as reusable workflow @ci-v2
     Dev->>R: push / PR to main
     R->>W: caller ci.yml (uses:)
     W->>W: checkout (SHA-pinned)
@@ -135,6 +136,21 @@ continues (best-effort per repo); a receiver that finds no pin of the
 SDK exits 0 with a notice; a failing build in the receiver fails only
 that consumer's bump run - no PR opens, the SDK release itself stays
 green.
+
+### 2.2a Per-repo release lane (`repo-release.yml`)
+
+Called by every non-SDK repo's generated `release.yml` caller on a
+`v*` tag push. One job: checkout the tagged commit, run the repo
+class's standard gates (rust: build+test locked; flutter: pub
+get/analyze/format/test/web-build with the `sentin8-flutter` path dep
+re-cloned; e2e: npm ci + typecheck + test; site: npm install +
+harvest/build), then `gh release create <tag> --verify-tag
+--generate-notes` (single-repo `contents: write`, `continue-on-error`,
+idempotent on an existing Release). The tag itself is the source of
+truth - the Release is the presentation layer. sdk-* prefixed repos
+never call this lane: their `{prefix}-v*` tags route through
+`sdk-release.yml` (§2.2), which now also creates its own GitHub
+Release after the locked build+test.
 
 ### 2.3 Aggregation nightly (`aggregation-nightly.yml`)
 
@@ -216,7 +232,7 @@ Run from the aggregation tree root. Exits 2 outside the tree, 1 on
   read`; the bump receiver raises to `contents: write +
   pull-requests: write` only for the PR step.
 * **SHA pinning**: all third-party actions pinned to full commit SHAs;
-  callers pin `@ci-v1`.
+  callers pin `@ci-v2`.
 * **Cache hygiene**: `rust-cache` keys on lockfile + toolchain; Flutter
   action caches SDK + pub. Ad-hoc caches are never shared across jobs.
 * **Injection safety**: dispatch payloads are read via `env:` into

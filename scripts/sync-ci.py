@@ -38,7 +38,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CI_REF = "ci-v1"
+CI_REF = "ci-v2"
 CI_REPO = "Sentin8/sentin8-ci"
 RUSTC_VERSION = "1.98.1"
 FLUTTER_VERSION = "3.47.2"
@@ -333,7 +333,8 @@ jobs:
 def caller_release(r: Repo) -> str:
     body = f"""name: release
 # SDK tag-push release lane: builds the tag, fans out the pin-bump
-# cascade to consumers (gated behind the cascade GitHub App secrets).
+# cascade to consumers (gated behind the cascade GitHub App secrets),
+# creates the GitHub Release (CICD design §2.6).
 on:
   push:
     tags: ['{r.sdk_tag_prefix}*']
@@ -346,6 +347,31 @@ jobs:
     secrets:
       SENTIN8_CI_APP_ID: ${{{{ secrets.SENTIN8_CI_APP_ID }}}}
       SENTIN8_CI_APP_PRIVATE_KEY: ${{{{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}}}
+"""
+    return "\n".join(CALLER_HEADER + body.splitlines()) + "\n"
+
+
+def caller_repo_release(r: Repo) -> str:
+    """The v* tag-push release caller for NON-SDK repos (CICD design §2.6).
+
+    sdk-* prefixed repos keep `caller_release` (their tags are
+    `{prefix}-v*` and resolve to the sdk-release lane + pin-bump
+    cascade). Everything else releases on plain `v*` and steers the
+    class-aware `repo-release.yml` build + GitHub-Release lane.
+    """
+    body = f"""name: release
+# Tag-push release lane: builds + tests the tagged commit and converts
+# the tag into a GitHub Release (CICD design §2.6).
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    uses: {CI_REPO}/.github/workflows/repo-release.yml@{CI_REF}
+    with:
+      repo-class: '{r.cls}'
+      sentin8-flutter-path: '{flutter_path_dep(r.path)}'
 """
     return "\n".join(CALLER_HEADER + body.splitlines()) + "\n"
 
@@ -444,6 +470,11 @@ def main() -> int:
                            RUST_TOOLCHAIN, args.dry_run, args.check)
         if r.cls == "rust" and r.sdk_tag_prefix:
             drift |= write(wf / "release.yml", caller_release(r),
+                           args.dry_run, args.check)
+        elif r.cls in ("rust", "flutter", "e2e"):
+            # Non-SDK repos release on plain `v*` through the class-
+            # aware repo-release lane (docs repos carry no artifact).
+            drift |= write(wf / "release.yml", caller_repo_release(r),
                            args.dry_run, args.check)
         if r.cls == "rust" and r.pins:
             drift |= write(wf / "sdk-bump.yml", caller_sdk_bump(),

@@ -15,7 +15,7 @@
 pipelines for the whole Sentin8 repository tree (~98 repos across 8 GitHub
 orgs). Every repository carries only a thin generated *caller workflow*
 that delegates into one of this repo's *reusable workflows*; all pipeline
-logic lives here, versioned under the `ci-v1` tag. A sync script
+logic lives here, versioned under the `ci-v2` tag. A sync script
 (`scripts/sync-ci.py`) generates the callers from the tree itself.
 
 ## 2. Motivation
@@ -27,7 +27,7 @@ central CI authority, every repo would need a hand-maintained copy of the
 same pipeline - 98 drifting copies. Reusable workflows from a **public**
 repo are callable from any org, which makes this repo the one place where
 the pipeline for every class (Rust service, Flutter app, Playwright e2e,
-docs group) is defined, and the one tag (`ci-v1`) every repo pins.
+docs group) is defined, and the one tag (`ci-v2`) every repo pins.
 
 ## 3. Architecture & High-Level Design
 
@@ -36,7 +36,7 @@ graph TD
     subgraph Repos["~98 repos, 8 orgs (public)"]
         C["thin caller ci.yml<br/>(generated)"]
     end
-    subgraph CI["Sentin8/sentin8-ci @ ci-v1"]
+    subgraph CI["Sentin8/sentin8-ci @ ci-v2"]
         W1["rust.yml"]
         W2["flutter-app.yml"]
         W3["e2e-repo.yml"]
@@ -77,7 +77,9 @@ no-ops and the manual cascade keeps working.
 
 * **Reusable workflows** (`.github/workflows/*.yml`) - the callable
   lanes: `rust.yml`, `flutter-app.yml`, `e2e-repo.yml`, `docs-group.yml`,
-  `sdk-release.yml`, `sdk-bump.yml`, `aggregation-nightly.yml`, and
+  `sdk-release.yml`, `repo-release.yml` (per-repo tag-push release:
+  class-aware build + GitHub Release creation), `sdk-bump.yml`,
+  `aggregation-nightly.yml`, and
   `site.yml` (the public website lane: harvest + build + GitHub Pages
   deploy for sentin8.dev and every `{vertical}.dev` site - WEB design).
   pipelines, each `on: workflow_call`, actions pinned to commit SHAs,
@@ -99,7 +101,7 @@ no-ops and the manual cascade keeps working.
   copies drift (the exact disease CI exists to prevent); cross-org
   *private* reuse is impossible, but **public** reusable workflows are
   callable from every org - the single deciding constraint.
-* **One version tag (`ci-v1`)** - all callers move in lockstep; a
+* **One version tag (`ci-v2`)** - all callers move in lockstep; a
   breaking input change is a major bump (`ci-v2`) with a rollout story,
   never a silent break.
 * **Generated callers, never hand-edited** - the sync script is the
@@ -122,7 +124,7 @@ no-ops and the manual cascade keeps working.
 ## 6. Internal Implementation & Invariants
 
 * **** No repo duplicates pipeline logic; logic changes ship in a
-  new `ci-v1` tag.
+  new `ci-v2` tag.
 * **** CI needs no product secrets: public repos (anonymous
   fetch) + certificate identity (TLS minted per run) + generated dev
   keys. The only credentials are the optional cascade App secrets.

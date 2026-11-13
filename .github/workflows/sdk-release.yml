@@ -34,7 +34,10 @@ on:
         required: false
 
 permissions:
-  contents: read
+  # contents:write = the GitHub Release step (single-repo scope). The
+  # consumer FAN-OUT mints its own App token below - this permission
+  # line never grants cross-repo reach.
+  contents: write
 
 env:
   SQLX_OFFLINE: 'true'
@@ -57,6 +60,27 @@ jobs:
         run: |
           cargo build --workspace --locked
           cargo test --workspace --locked
+
+      # ── GitHub Release (single-repo scope, GITHUB_TOKEN) ───────
+      # The tag itself is the source of truth; the Release is the
+      # presentation layer (CICD design §2.6). Best-effort: a failed
+      # release-create must not flip the run red (the build+test above
+      # is the gate; the tag exists regardless).
+      - name: Create GitHub Release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG already exists - nothing to do"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --verify-tag \
+            --generate-notes \
+            --title "$TAG"
 
       # ── Consumer fan-out (gated - invariant) ─────────────────
       # GITHUB_TOKEN cannot trigger cross-repo runs; the App token can.

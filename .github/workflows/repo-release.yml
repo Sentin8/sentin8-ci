@@ -1,0 +1,139 @@
+# SPDX-FileCopyrightText: Copyright Logically Magic Inc. <hello@logicallymagic.com>
+# SPDX-FileCopyrightText: Copyright Hamid Jahanzad <Hamid@Jahanzad.com>
+# SPDX-FileCopyrightText: Copyright Contributors to the Sentin8:CI
+# SPDX-License-Identifier: Apache-2.0
+
+# repo-release.yml - per-repo tag-push release lane (CICD design §2.6).
+#
+# Called by every NON-SDK repo's generated `release.yml` caller on its
+# `v*` tag push. Builds + tests the tagged commit per repo class (the
+# same gates the push lanes run), then converts the tag into a GitHub
+# Release with auto-generated notes. sdk-* repos have their own lane
+# (`sdk-release.yml`) - this workflow never runs on them.
+
+name: repo-release
+
+on:
+  workflow_call:
+    inputs:
+      # Repo class steering the build: rust | flutter | e2e | site.
+      repo-class:
+        description: 'Repo class (rust | flutter | e2e | site)'
+        required: false
+        default: 'rust'
+        type: string
+      # Flutter apps: the app's `sentin8:` path dependency AS WRITTEN in
+      # pubspec.yaml (empty = none / the sentin8-flutter package itself).
+      sentin8-flutter-path:
+        description: 'pubspec path dep to sentin8-flutter (empty = none)'
+        required: false
+        default: ''
+        type: string
+      # false for flutter packages without a web build.
+      build-web:
+        description: 'Run the class web build (flutter build web / site harvest+build)'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  # The release step tags a Release onto the same repo - GITHUB_TOKEN
+  # with contents:write suffices (single-repo scope; the CROSS-repo pin
+  # cascade is sdk-release.yml's App-gated concern, not this lane's).
+  contents: write
+
+env:
+  SQLX_OFFLINE: 'true'
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout (tagged commit)
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v7.0.1
+
+      # ── Class build gates (mirror the push lanes) ──────────────
+      - name: Rust toolchain
+        if: ${{ inputs.repo-class == 'rust' }}
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          cache: true
+
+      - name: Build + test (rust)
+        if: ${{ inputs.repo-class == 'rust' }}
+        run: |
+          cargo build --workspace --locked
+          cargo test --workspace --locked
+
+      - name: Flutter toolchain
+        if: ${{ inputs.repo-class == 'flutter' }}
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Clone sentin8-flutter (path dep)
+        if: ${{ inputs.repo-class == 'flutter' && inputs.sentin8-flutter-path != '' }}
+        run: |
+          set -euo pipefail
+          # The path dep is repo-relative from the checkout root
+          # (e.g. ../../sentin8/sentin8-flutter) - reproduce it.
+          dest="${{ inputs.sentin8-flutter-path }}"
+          mkdir -p "$(dirname "$dest")"
+          git clone --depth 1 https://github.com/Sentin8/sentin8-flutter "$dest"
+
+      - name: Analyze + test + build (flutter)
+        if: ${{ inputs.repo-class == 'flutter' }}
+        run: |
+          flutter pub get
+          flutter analyze
+          dart format --set-exit-if-changed --output=none .
+          flutter test
+          if [ "${{ inputs.build-web }}" = "true" ]; then
+            flutter build web --no-tree-shake-icons
+          fi
+
+      - name: Node toolchain (e2e / site)
+        if: ${{ inputs.repo-class == 'e2e' || inputs.repo-class == 'site' }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Typecheck + test (e2e)
+        if: ${{ inputs.repo-class == 'e2e' }}
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm test --if-present
+
+      - name: Build (site)
+        if: ${{ inputs.repo-class == 'site' && inputs.build-web }}
+        run: |
+          npm install
+          make harvest build
+
+      - name: Create GitHub Release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # Idempotent: re-pushing a tag whose Release already exists
+          # (lane retry) updates nothing and exits 0.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release $TAG already exists - nothing to do"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --verify-tag \
+            --generate-notes \
+            --title "$TAG"
+
+      - name: Release summary
+        run: |
+          echo "### Release ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "class: ${{ inputs.repo-class }} - notes auto-generated from commits" >> "$GITHUB_STEP_SUMMARY"
