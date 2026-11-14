@@ -35,6 +35,15 @@ on:
         required: false
         default: true
         type: boolean
+      # `auto` (default) steers by the pubspec `web:` dep; `vm` forces the
+      # VM host for repos whose tests exercise dart:io (HttpServer binds)
+      # even though the PACKAGE ships web code.
+      flutter-test-platform:
+        description: 'auto | chrome | vm'
+        required: false
+        default: 'auto'
+        type: string
+
 
 
 env:
@@ -102,6 +111,8 @@ jobs:
           # design; package:web pulls dart:js_interop, absent on the VM).
           if [ ! -d test ]; then
             echo 'no test/ directory - test step skipped'
+          if [ "${{ inputs.flutter-test-platform }}" = "vm" ]; then
+            flutter test
           elif grep -qE '^\s*web:' pubspec.yaml; then
             flutter test --platform chrome
           else

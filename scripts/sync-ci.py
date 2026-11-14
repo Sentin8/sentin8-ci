@@ -82,6 +82,15 @@ def remote_slug(repo: Path) -> tuple[str, str] | None:
     return m.group(1), m.group(2)
 
 
+FLUTTER_TEST_PLATFORM_VM: frozenset[str] = frozenset(
+    # Flutter repos whose TESTS exercise dart:io (HttpServer binds on
+    # InternetAddress.loopbackIPv4) and therefore need the VM host even
+    # though the package itself ships web code (pubspec `web:` dep is
+    # about the build target, not the test harness).
+    {"Hotel8/hotel8-epms"},
+)
+
+
 def classify(repo: Path) -> str:
     if (repo / "playwright.config.ts").is_file() and (repo / "package.json").is_file():
         return "e2e"
@@ -378,6 +387,7 @@ jobs:
       repo-class: '{r.cls}'
       sentin8-flutter-path: '{flutter_path_dep(r.path)}'
       build-web: {'true' if (r.path / 'web').is_dir() else 'false'}
+      flutter-test-platform: {'vm' if r.slug in FLUTTER_TEST_PLATFORM_VM else 'auto'}
     # The GitHub Release step inside the lane needs contents:write on
     # THIS repo - the caller grants it (see sdk-release caller note).
     permissions:
