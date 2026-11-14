@@ -106,12 +106,13 @@ jobs:
           flutter analyze || echo 'analyze issues (advisory) - logged, not fatal'
           dart format --output=none --set-exit-if-changed . \
             || echo 'format drift (advisory) - logged, not fatal'
-          # test: blocking - mirrors flutter-app.yml: web-coupled packages
-          # run on chrome (the sentin8 Flutter apps are web-only by
-          # design; package:web pulls dart:js_interop, absent on the VM).
+          # test: blocking. `vm` override forces the dart:io host (repos
+          # whose tests bind sockets); `auto` steers by the pubspec `web:`
+          # dep - web-coupled packages run on chrome (package:web pulls
+          # dart:js_interop, absent on the VM).
           if [ ! -d test ]; then
             echo 'no test/ directory - test step skipped'
-          if [ "${{ inputs.flutter-test-platform }}" = "vm" ]; then
+          elif [ "${{ inputs.flutter-test-platform }}" = "vm" ]; then
             flutter test
           elif grep -qE '^\s*web:' pubspec.yaml; then
             flutter test --platform chrome
