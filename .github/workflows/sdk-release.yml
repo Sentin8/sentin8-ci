@@ -155,7 +155,6 @@ jobs:
             exit 1
           fi
           APP_JWT="${JWT_HDR}.${JWT_PL}.$(b64url < "$RUNNER_TEMP/cascade.sig")"
-          rm -f "$KEY_FILE"
           # Debug (remove after the cascade verifies): the key fingerprint
           # (must equal the local `openssl pkey -pubout | openssl md5`),
           # the JWT segment shapes, and a payload decode.
@@ -164,6 +163,7 @@ jobs:
           echo "jwt dots: $(echo -n "$APP_JWT" | tr -cd "." | wc -c)"
           echo "sig_b64_len: ${APP_JWT##*.}" | awk '{ print length($2) }'
           python3 -c "import base64,sys; p=sys.argv[1].split('.'); print('jwt pl:', base64.urlsafe_b64decode(p[1]+'='*(-len(p[1])%4))); print('sig seg len:', len(p[2]))" "$APP_JWT"
+          rm -f "$KEY_FILE"
           mkdir -p .orgtok
           token_for() {
             local org="$1" cache=".orgtok/$org"
