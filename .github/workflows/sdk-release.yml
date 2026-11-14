@@ -155,14 +155,15 @@ jobs:
             exit 1
           fi
           APP_JWT="${JWT_HDR}.${JWT_PL}.$(b64url < "$RUNNER_TEMP/cascade.sig")"
-          # Debug (remove after the cascade verifies): the key fingerprint
-          # (must equal the local `openssl pkey -pubout | openssl md5`),
-          # the JWT segment shapes, and a payload decode.
-          openssl pkey -in "$KEY_FILE" -pubout | openssl md5 || true
-          echo "sig_len: $(wc -c < "$RUNNER_TEMP/cascade.sig")"
-          echo "jwt dots: $(echo -n "$APP_JWT" | tr -cd "." | wc -c)"
-          echo "sig_b64_len: ${APP_JWT##*.}" | awk '{ print length($2) }'
-          python3 -c "import base64,sys; p=sys.argv[1].split('.'); print('jwt pl:', base64.urlsafe_b64decode(p[1]+'='*(-len(p[1])%4))); print('sig seg len:', len(p[2]))" "$APP_JWT"
+          # Debug (self-verify): openssl verifies the detached signature over
+          # the exact hdr.pl bytes with the mint key - a PASS here means
+          # GitHub is rejecting for a reason other than our signature.
+          printf "%s.%s" "$JWT_HDR" "$JWT_PL" > "$RUNNER_TEMP/cascade.msg"
+          if openssl dgst -sha256 -verify <(openssl pkey -in "$KEY_FILE" -pubout) -signature "$RUNNER_TEMP/cascade.sig" "$RUNNER_TEMP/cascade.msg"; then
+            echo "runner self-verify: PASS"
+          else
+            echo "runner self-verify: FAIL"
+          fi
           rm -f "$KEY_FILE"
           mkdir -p .orgtok
           token_for() {
