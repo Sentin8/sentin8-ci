@@ -115,9 +115,9 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           SDK_REPO: ${{ inputs.sdk-repo }}
           SDK_TAG: ${{ github.ref_name }}
-          # The consumer map lives in this repo at the ci-v1 ref the
-          # caller itself pins - one source of truth for the graph.
-          CONSUMER_MAP_URL: https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v1/consumers.json
+          # The consumer map lives in this repo at the current CI ref - the
+          # single source of truth for the dependency graph.
+          CONSUMER_MAP_URL: https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v3/consumers.json
         run: |
           set -euo pipefail
           map="$(curl -fsSL "$CONSUMER_MAP_URL")"
