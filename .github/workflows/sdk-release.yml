@@ -133,9 +133,17 @@ jobs:
           # by-org pattern in the first live run). A bash-only App-JWT mint
           # (openssl) provides one installation token PER TARGET ORG.
           b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
-          JWT_HDR="$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)"
-          JWT_PL="$(python3 -c "import json,time,os; print(json.dumps({'iat': int(time.time())-60, 'exp': int(time.time())+540, 'iss': os.environ['APP_ID']}).replace(' ', ''))" | b64url)"
-          APP_JWT="$(printf '%s.%s' "$JWT_HDR" "$JWT_PL" | openssl dgst -binary -sha256 -sign <(printf '%s' "$APP_PRIVATE_KEY") | b64url)"
+          # printf consumes backslash-escaped quotes in the FORMAT argument
+          # and python's print appends a newline - both were signed into the
+          # JWT, breaking decode. JSON text goes through a variable +
+          # printf '%s', and the payload is emitted newline-free.
+          JWT_JSON='{"alg":"RS256","typ":"JWT"}'
+          JWT_HDR="$(printf '%s' "$JWT_JSON" | b64url)"
+          # end='' keeps the payload newline-free (a trailing newline is
+          # signed into the JWT and breaks decoding).
+          JWT_PL="$(python3 -c "import json,sys,time,os; sys.stdout.write(json.dumps({'iat': int(time.time())-60, 'exp': int(time.time())+540, 'iss': os.environ['APP_ID']}).replace(' ', ''))" | b64url)"
+          printf '%s.%s' "$JWT_HDR" "$JWT_PL" | openssl dgst -binary -sha256 -sign <(printf '%s' "$APP_PRIVATE_KEY") > "$RUNNER_TEMP/cascade.sig"
+          APP_JWT="${JWT_HDR}.${JWT_PL}.$(b64url < "$RUNNER_TEMP/cascade.sig")"
           mkdir -p .orgtok
           token_for() {
             local org="$1" cache=".orgtok/$org"
