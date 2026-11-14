@@ -112,14 +112,117 @@ jobs:
           owner: ${{ github.repository_owner }}
           permission-contents: write
 
+      # Per-org cascade tokens: GitHub installation tokens are
+      # per-installation, so the fan-out mints one token PER target org via
+      # the action (the same mint the producing org's step uses - the
+      # hand-rolled openssl JWT was rejected by the API even when
+      # self-verified; the action's JWT is accepted).
+      - name: Token for Sentin8
+        id: tok-Sentin8
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Sentin8
+          permission-contents: write
+      - name: Token for Bank8-dev
+        id: tok-Bank8-dev
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Bank8-dev
+          permission-contents: write
+      - name: Token for OpenFin8
+        id: tok-OpenFin8
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: OpenFin8
+          permission-contents: write
+      - name: Token for Hotel8
+        id: tok-Hotel8
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Hotel8
+          permission-contents: write
+      - name: Token for Exchange8-dev
+        id: tok-Exchange8-dev
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Exchange8-dev
+          permission-contents: write
+      - name: Token for Trade8-dev
+        id: tok-Trade8-dev
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Trade8-dev
+          permission-contents: write
+      - name: Token for commerce8
+        id: tok-commerce8
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: commerce8
+          permission-contents: write
+      - name: Token for Email8-dev
+        id: tok-Email8-dev
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Email8-dev
+          permission-contents: write
+      - name: Token for Health8
+        id: tok-Health8
+        if: ${{ steps.app-token.outputs.token != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
+          private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          owner: Health8
+          permission-contents: write
+
       - name: Fan out sdk-released dispatch to consumers
         if: ${{ steps.app-token.outputs.token != '' }}
         env:
           SDK_REPO: ${{ inputs.sdk-repo }}
           SDK_TAG: ${{ github.ref_name }}
           CONSUMER_MAP_URL: https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v3/consumers.json
-          APP_ID: ${{ secrets.SENTIN8_CI_APP_ID }}
-          APP_PRIVATE_KEY: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
+          TOK_SENTIN8: ${{ steps.tok-Sentin8.outputs.token }}
+          TOK_BANK8DEV: ${{ steps.tok-Bank8-dev.outputs.token }}
+          TOK_OPENFIN8: ${{ steps.tok-OpenFin8.outputs.token }}
+          TOK_HOTEL8: ${{ steps.tok-Hotel8.outputs.token }}
+          TOK_EXCHANGE8DEV: ${{ steps.tok-Exchange8-dev.outputs.token }}
+          TOK_TRADE8DEV: ${{ steps.tok-Trade8-dev.outputs.token }}
+          TOK_COMMERCE8: ${{ steps.tok-commerce8.outputs.token }}
+          TOK_EMAIL8DEV: ${{ steps.tok-Email8-dev.outputs.token }}
+          TOK_HEALTH8: ${{ steps.tok-Health8.outputs.token }}
         run: |
           set -euo pipefail
           map="$(curl -fsSL "$CONSUMER_MAP_URL")"
@@ -128,58 +231,28 @@ jobs:
             echo "no consumers declared for $SDK_REPO - dispatch done"
             exit 0
           fi
-          # Installation tokens are PER-INSTALLATION: a token minted for the
-          # producing org cannot dispatch into another org's repo (the 403
-          # by-org pattern in the first live run). A bash-only App-JWT mint
-          # (openssl) provides one installation token PER TARGET ORG.
-          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
-          # printf consumes backslash-escaped quotes in the FORMAT argument
-          # and python's print appends a newline - both were signed into the
-          # JWT, breaking decode. JSON text goes through a variable +
-          # printf '%s', and the payload is emitted newline-free.
-          JWT_JSON='{"alg":"RS256","typ":"JWT"}'
-          JWT_HDR="$(printf '%s' "$JWT_JSON" | b64url)"
-          # end='' keeps the payload newline-free (a trailing newline is
-          # signed into the JWT and breaks decoding).
-          JWT_PL="$(python3 -c "import json,sys,time,os; sys.stdout.write(json.dumps({'iat': int(time.time())-60, 'exp': int(time.time())+540, 'iss': os.environ['APP_ID']}).replace(' ', ''))" | b64url)"
-          # Write the key to a temp file first: process substitution +
-          # secret env can race the openssl read; a real file is robust,
-          # and an EMPTY signature file aborts loudly instead of minting a
-          # token with an empty signature segment (the silent 401 class).
-          KEY_FILE="$RUNNER_TEMP/cascade-key.pem"
-          printf '%s' "$APP_PRIVATE_KEY" > "$KEY_FILE"
-          chmod 600 "$KEY_FILE"
-          printf '%s.%s' "$JWT_HDR" "$JWT_PL" | openssl dgst -binary -sha256 -sign "$KEY_FILE" > "$RUNNER_TEMP/cascade.sig"
-          if [ ! -s "$RUNNER_TEMP/cascade.sig" ]; then
-            echo "jwt signature empty - openssl signing failed" >&2
-            exit 1
-          fi
-          APP_JWT="${JWT_HDR}.${JWT_PL}.$(b64url < "$RUNNER_TEMP/cascade.sig")"
-          # Debug (self-verify): openssl verifies the detached signature over
-          # the exact hdr.pl bytes with the mint key - a PASS here means
-          # GitHub is rejecting for a reason other than our signature.
-          printf "%s.%s" "$JWT_HDR" "$JWT_PL" > "$RUNNER_TEMP/cascade.msg"
-          if openssl dgst -sha256 -verify <(openssl pkey -in "$KEY_FILE" -pubout) -signature "$RUNNER_TEMP/cascade.sig" "$RUNNER_TEMP/cascade.msg"; then
-            echo "runner self-verify: PASS"
-          else
-            echo "runner self-verify: FAIL"
-          fi
-          rm -f "$KEY_FILE"
-          mkdir -p .orgtok
           token_for() {
-            local org="$1" cache=".orgtok/$org"
-            if [ -s "$cache" ]; then cat "$cache"; return; fi
-            local iid
-            iid="$(GH_TOKEN="$APP_JWT" gh api '/app/installations?per_page=100' --jq ".[] | select(.account.login==\"$org\") | .id")"
-            GH_TOKEN="$APP_JWT" gh api --method POST "/app/installations/$iid/access_tokens" --jq .token > "$cache"
-            cat "$cache"
+            case "$1" in
+              Sentin8) echo "$TOK_SENTIN8" ;;
+              Bank8-dev) echo "$TOK_BANK8DEV" ;;
+              OpenFin8) echo "$TOK_OPENFIN8" ;;
+              Hotel8) echo "$TOK_HOTEL8" ;;
+              Exchange8-dev) echo "$TOK_EXCHANGE8DEV" ;;
+              Trade8-dev) echo "$TOK_TRADE8DEV" ;;
+              commerce8) echo "$TOK_COMMERCE8" ;;
+              Email8-dev) echo "$TOK_EMAIL8DEV" ;;
+              Health8) echo "$TOK_HEALTH8" ;;
+              *) return 1 ;;
+            esac
           }
           while IFS= read -r repo; do
             [ -n "$repo" ] || continue
             org="${repo%%/*}"
+            ORG_TOKEN="$(token_for "$org")" || { echo "no token for org $org - skip"; continue; }
+            if [ -z "$ORG_TOKEN" ]; then echo "org $org token empty - skip $repo"; continue; fi
             echo "dispatch to $repo (sdk-released: $SDK_REPO $SDK_TAG)"
             payload_sdk="$(printf '%s' "$SDK_REPO" | sed 's|/|__|g')"
-            GH_TOKEN="$(token_for "$org")" gh api \
+            GH_TOKEN="$ORG_TOKEN" gh api \
               --method POST \
               -H 'Accept: application/vnd.github+json' \
               "/repos/$repo/dispatches" \
@@ -189,4 +262,3 @@ jobs:
               && echo "  dispatched" \
               || echo "  FAILED (continuing - cascade is best-effort per repo)"
           done <<< "$repos"
-          rm -rf .orgtok
