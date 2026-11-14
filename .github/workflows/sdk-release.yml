@@ -156,6 +156,9 @@ jobs:
           fi
           APP_JWT="${JWT_HDR}.${JWT_PL}.$(b64url < "$RUNNER_TEMP/cascade.sig")"
           rm -f "$KEY_FILE"
+          # Debug (remove after the cascade verifies): dump the minted JWT
+          # header + payload so a malformed mint is visible in the log.
+          python3 -c "import base64,sys; p=sys.argv[1].split('.'); print('jwt hdr:', base64.urlsafe_b64decode(p[0]+'='*(-len(p[0])%4))); print('jwt pl:', base64.urlsafe_b64decode(p[1]+'='*(-len(p[1])%4)))" "$APP_JWT"
           mkdir -p .orgtok
           token_for() {
             local org="$1" cache=".orgtok/$org"
