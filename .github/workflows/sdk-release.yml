@@ -121,12 +121,7 @@ jobs:
         run: |
           set -euo pipefail
           map="$(curl -fsSL "$CONSUMER_MAP_URL")"
-          repos="$(printf '%s' "$map" | python3 -c '
-            import json, sys
-            sdk = sys.argv[1]
-            m = json.load(sys.stdin)
-            print("\n".join(m.get(sdk, [])))
-          ' "$SDK_REPO")"
+          repos="$(printf '%s' "$map" | python3 -c "import json,sys; sdk=sys.argv[1]; m=json.load(sys.stdin); print('\n'.join(m.get(sdk, [])))" "$SDK_REPO")"
           if [ -z "$repos" ]; then
             echo "no consumers declared for $SDK_REPO - dispatch done"
             exit 0
