@@ -104,9 +104,12 @@ jobs:
         with:
           app-id: ${{ secrets.SENTIN8_CI_APP_ID }}
           private-key: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
-          # Token is minted for THIS repository; the dispatch API call
-          # needs contents:write on the TARGET repos - the App's install
-          # must grant it per org (design §2.5 rollout step 7).
+          # Mint for the SDK repo's OWNER org (not just this repo): the
+          # fan-out dispatches into CONSUMER repos across 8 orgs, and an
+          # installation token minted for one repo is scoped to that
+          # installation - the owner param ties it to the org install
+          # (all-repo access) so cross-org dispatch is authorized.
+          owner: ${{ github.repository_owner }}
           permission-contents: write
 
       - name: Fan out sdk-released dispatch to consumers
