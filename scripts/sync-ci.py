@@ -377,6 +377,7 @@ jobs:
     with:
       repo-class: '{r.cls}'
       sentin8-flutter-path: '{flutter_path_dep(r.path)}'
+      build-web: {'true' if (r.path / 'web').is_dir() else 'false'}
     # The GitHub Release step inside the lane needs contents:write on
     # THIS repo - the caller grants it (see sdk-release caller note).
     permissions:
