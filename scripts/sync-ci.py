@@ -38,7 +38,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CI_REF = "ci-v2"
+CI_REF = "ci-v3"
 CI_REPO = "Sentin8/sentin8-ci"
 RUSTC_VERSION = "1.98.1"
 FLUTTER_VERSION = "3.47.2"
