@@ -115,12 +115,11 @@ jobs:
       - name: Fan out sdk-released dispatch to consumers
         if: ${{ steps.app-token.outputs.token != '' }}
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           SDK_REPO: ${{ inputs.sdk-repo }}
           SDK_TAG: ${{ github.ref_name }}
-          # The consumer map lives in this repo at the current CI ref - the
-          # single source of truth for the dependency graph.
           CONSUMER_MAP_URL: https://raw.githubusercontent.com/Sentin8/sentin8-ci/ci-v3/consumers.json
+          APP_ID: ${{ secrets.SENTIN8_CI_APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.SENTIN8_CI_APP_PRIVATE_KEY }}
         run: |
           set -euo pipefail
           map="$(curl -fsSL "$CONSUMER_MAP_URL")"
@@ -129,14 +128,29 @@ jobs:
             echo "no consumers declared for $SDK_REPO - dispatch done"
             exit 0
           fi
+          # Installation tokens are PER-INSTALLATION: a token minted for the
+          # producing org cannot dispatch into another org's repo (the 403
+          # by-org pattern in the first live run). A bash-only App-JWT mint
+          # (openssl) provides one installation token PER TARGET ORG.
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+          JWT_HDR="$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)"
+          JWT_PL="$(python3 -c "import json,time,os; print(json.dumps({'iat': int(time.time())-60, 'exp': int(time.time())+540, 'iss': os.environ['APP_ID']}).replace(' ', ''))" | b64url)"
+          APP_JWT="$(printf '%s.%s' "$JWT_HDR" "$JWT_PL" | openssl dgst -binary -sha256 -sign <(printf '%s' "$APP_PRIVATE_KEY") | b64url)"
+          mkdir -p .orgtok
+          token_for() {
+            local org="$1" cache=".orgtok/$org"
+            if [ -s "$cache" ]; then cat "$cache"; return; fi
+            local iid
+            iid="$(GH_TOKEN="$APP_JWT" gh api '/app/installations?per_page=100' --jq ".[] | select(.account.login==\"$org\") | .id")"
+            GH_TOKEN="$APP_JWT" gh api --method POST "/app/installations/$iid/access_tokens" --jq .token > "$cache"
+            cat "$cache"
+          }
           while IFS= read -r repo; do
             [ -n "$repo" ] || continue
-            echo "dispatch → $repo (sdk-released: $SDK_REPO $SDK_TAG)"
-            # The payload carries the SDK repo slug with slashes
-            # replaced (client_payload tolerates it; receivers undo
-            # the substitution - see sdk-bump.yml).
+            org="${repo%%/*}"
+            echo "dispatch to $repo (sdk-released: $SDK_REPO $SDK_TAG)"
             payload_sdk="$(printf '%s' "$SDK_REPO" | sed 's|/|__|g')"
-            gh api \
+            GH_TOKEN="$(token_for "$org")" gh api \
               --method POST \
               -H 'Accept: application/vnd.github+json' \
               "/repos/$repo/dispatches" \
@@ -146,3 +160,4 @@ jobs:
               && echo "  dispatched" \
               || echo "  FAILED (continuing - cascade is best-effort per repo)"
           done <<< "$repos"
+          rm -rf .orgtok
